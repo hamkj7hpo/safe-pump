@@ -52,3 +52,7 @@ config = "scripts/spellcheck.toml"
 pre-release-commit-message = "Publish {{crate_name}} v{{version}}"
 tag-message = "Publish {{crate_name}} v{{version}}"
 consolidate-commits = false
+
+[features]
+default = []
+confidential_transfer = ["solana-zk-token-sdk"]
