@@ -14,7 +14,7 @@ solana-program = "2.2.1"
 spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "746fbdbba38760fd57e7bd6687d27ad4c0cd50f4" }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "746fbdbba38760fd57e7bd6687d27ad4c0cd50f4" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d01df1cb477ce0f788996bd0df745ae7f01262ef" }
-spl-pod = "0.5.1"
+spl-pod = "0.4.0"
 spl-token-group-interface = "0.2.4"
 spl-token-metadata-interface = "0.3.4"
 spl-transfer-hook-interface = "0.6.4"
@@ -30,6 +30,3 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
-
-[patch.crates-io]
-spl-pod = { version = "=0.5.1" } # Pin to exact version without features
