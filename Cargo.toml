@@ -30,3 +30,7 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
+
+[patch.crates-io]
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d01df1cb477ce0f788996bd0df745ae7f01262ef" }
+solana-zk-token-sdk = { version = "=2.1.0" }
