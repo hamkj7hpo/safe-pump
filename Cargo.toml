@@ -32,5 +32,4 @@ cpi = []
 overflow-checks = true
 
 [patch.crates-io]
-spl-pod = { version = "0.5.1", features = ["serde"] } # Ensure compatibility with solana-zk-sdk 2.1.0
-solana-zk-sdk = { version = "2.1.0" }
+spl-pod = { version = "=0.5.1" } # Pin to exact version without features
