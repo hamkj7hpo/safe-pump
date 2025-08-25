@@ -16,7 +16,7 @@ spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c", features = ["no-entrypoint"] }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "decb8c063443bbd67ad7d00e7fbfab3a76029620", package = "spl-token-group-interface" }
-spl-token-metadata-interface = "0.3.4"
+spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "5f364225677576e03af16e3337260cd9b0f9ef24", package = "spl-token-metadata-interface" }
 spl-transfer-hook-interface = "0.6.4"
 spl-type-length-value = "0.6.0"
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "7231bf2a86b4ba6ead745e5ada7b163a8d8ed66d", package = "solana-zk-sdk" }
