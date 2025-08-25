@@ -15,7 +15,7 @@ spl-token = "4.0.0"
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "a504320c1f48537eb8391c3e5621d9c971660fca" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c", features = ["no-entrypoint"] }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
-spl-token-group-interface = "0.2.4"
+spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "d45997f6e2f2d6111f5acc478095ee4527b855d9" }
 spl-token-metadata-interface = "0.3.4"
 spl-transfer-hook-interface = "0.6.4"
 spl-type-length-value = "0.6.0"
@@ -33,6 +33,3 @@ overflow-checks = true
 
 [patch.crates-io]
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
-spl-token-group-interface = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254", package = "spl-token-group-interface" }
-spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254", package = "spl-token-metadata-interface" }
-spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254", package = "spl-transfer-hook-interface" }
