@@ -14,7 +14,7 @@ solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a
 spl-token = "4.0.0"
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "a504320c1f48537eb8391c3e5621d9c971660fca" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c", features = ["no-entrypoint"] }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "4d65c25310e62d5ff4f39a8c488ecb50b311452f" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "<NEW_COMMIT_HASH>" }
 spl-token-group-interface = "0.2.4"
 spl-token-metadata-interface = "0.3.4"
 spl-transfer-hook-interface = "0.6.4"
