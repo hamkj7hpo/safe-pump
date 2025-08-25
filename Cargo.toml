@@ -30,3 +30,6 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
+
+[patch.crates-io]
+spl-pod = { version = "0.4.0" }
