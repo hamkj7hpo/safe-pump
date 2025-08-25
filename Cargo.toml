@@ -8,7 +8,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 spl-discriminator = "0.4.1"
-anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "dbfdadca848af65a4bd8b48b777a30ca9af1430d", features = ["init-if-needed"] }
 anchor-spl = { version = "0.29.0", features = ["memo"] }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a7870826307290c30b7d80768f40267433a1" }
 spl-token = "4.0.0"
