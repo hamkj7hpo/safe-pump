@@ -19,7 +19,7 @@ spl-token-group-interface = "0.2.4"
 spl-token-metadata-interface = "0.3.4"
 spl-transfer-hook-interface = "0.6.4"
 spl-type-length-value = "0.6.0"
-solana-zk-sdk = "2.1.0"
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "170697e0f195944c4396ba22ed409451e86fec69" }
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "27a507120031969e14b18370e1aa472fb91e9512", features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
@@ -30,6 +30,3 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
-
-[patch.crates-io]
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
