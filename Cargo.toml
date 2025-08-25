@@ -10,7 +10,7 @@ crate-type = ["cdylib", "lib"]
 spl-discriminator = "0.4.1"
 anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
 anchor-spl = { version = "0.29.0", features = ["memo"] }
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", tag = "v1.18.0" }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "339c3f1fcf5638f90ae06e90d528aeb6607fec5b" }
 spl-token = "4.0.0"
 spl-associated-token-account = "2.0.0"
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "2099caa13da83a3c3f968abba43f15cadd677aff" }
