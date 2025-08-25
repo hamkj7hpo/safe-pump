@@ -30,6 +30,3 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
-
-[patch.crates-io]
-solana-program = { version = "=2.1.0" }
