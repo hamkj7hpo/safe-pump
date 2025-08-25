@@ -18,7 +18,7 @@ spl-pod = "0.4.0"
 spl-token-group-interface = "0.2.4"
 spl-token-metadata-interface = "0.3.4"
 spl-transfer-hook-interface = "0.6.4"
-spl-type-length-value = "0.7.0"
+spl-type-length-value = "0.6.0"
 solana-zk-sdk = "2.1.0"
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "3cd46cc0bb8d565688ed8b616023270a5afc7b69", features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
