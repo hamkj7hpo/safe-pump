@@ -13,7 +13,7 @@ anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "5cf773800
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a7870826307290c30b7d80768f40267433a1" }
 spl-token = "4.0.0"
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "a504320c1f48537eb8391c3e5621d9c971660fca" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "2099caa13da83a3c3f968abba43f15cadd677aff" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c", features = ["no-entrypoint"] }
 spl-pod = "0.4.0"
 spl-token-group-interface = "0.2.4"
 spl-token-metadata-interface = "0.3.4"
