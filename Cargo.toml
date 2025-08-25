@@ -30,3 +30,6 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
+
+[patch.crates-io]
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
