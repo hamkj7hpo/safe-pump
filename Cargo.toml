@@ -23,7 +23,7 @@ solana-zk-sdk = "2.1.0"
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "8887ceeb55e76d8fb1a39eb444a8b0c93ca5f6cd", features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
-zeroize = "1.3.0"
+zeroize = "1.0.0"
 
 [features]
 cpi = []
