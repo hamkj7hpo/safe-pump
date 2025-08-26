@@ -33,5 +33,5 @@ overflow-checks = true
 
 [patch.crates-io]
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
-spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "<NEW_COMMIT_HASH>", package = "spl-token" }
+spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c7a02af9c6c72c0e9c466218c97ec88e476b119", package = "spl-token" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c" }
