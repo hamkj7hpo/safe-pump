@@ -12,8 +12,8 @@ anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "afd7dff0
 anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "afd7dff0c0b5194fda3ac9262d1f4970b994d5f7" }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a7870826307290c30b7d80768f40267433a1" }
 spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-token" }
-spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "a504320c1f48537eb8391c3e5621d9c971660fca" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c", features = ["no-entrypoint"] }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "16c9441f1adc7493c7dd9a6985cf1ecfef647e2a" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "c264648641cfa1ef2a377e3d026d6423f2a21d7c", features = ["no-entrypoint"] }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "decb8c063443bbd67ad7d00e7fbfab3a76029620", package = "spl-token-group-interface" }
 spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "fcb4a1c79576a6d4eb8dea8dd38b370529dda008", package = "spl-token-metadata-interface" }
@@ -35,5 +35,5 @@ overflow-checks = true
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
 spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-token" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-discriminator" }
-spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "a504320c1f48537eb8391c3e5621d9c971660fca" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c" }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "16c9441f1adc7493c7dd9a6985cf1ecfef647e2a" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "c264648641cfa1ef2a377e3d026d6423f2a21d7c" }
