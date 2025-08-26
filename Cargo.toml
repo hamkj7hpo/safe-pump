@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 [dependencies]
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-discriminator" }
 anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "dbfdadca848af65a4bd8b48b777a30ca9af1430d", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "5cf7738000adea3e58cae5fd99dd66ea045a9c31", features = ["memo"] }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "5de1e5cbac25ea02f5f062872cf70121f3e7150e", features = ["memo"] }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a7870826307290c30b7d80768f40267433a1" }
 spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-token" }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "a504320c1f48537eb8391c3e5621d9c971660fca" }
