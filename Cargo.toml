@@ -18,7 +18,7 @@ spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b19
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "decb8c063443bbd67ad7d00e7fbfab3a76029620", package = "spl-token-group-interface" }
 spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "fcb4a1c79576a6d4eb8dea8dd38b370529dda008", package = "spl-token-metadata-interface" }
 spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "7be529916806e8693d6fb2622db31e5d463e9f79", package = "spl-transfer-hook-interface" }
-spl-type-length-value = "0.6.0"
+spl-type-length-value = { path = "/tmp/spl-type-length-value" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "7231bf2a86b4ba6ead745e5ada7b163a8d8ed66d", package = "solana-zk-sdk" }
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "27a507120031969e14b18370e1aa472fb91e9512", features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
