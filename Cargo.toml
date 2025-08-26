@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "<NEW_COMMIT_HASH>", package = "spl-discriminator" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-discriminator" }
 anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "dbfdadca848af65a4bd8b48b777a30ca9af1430d", features = ["init-if-needed"] }
 anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "5cf7738000adea3e58cae5fd99dd66ea045a9c31", features = ["memo"] }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a7870826307290c30b7d80768f40267433a1" }
@@ -33,4 +33,6 @@ overflow-checks = true
 
 [patch.crates-io]
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
+spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-token" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-discriminator" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "d5f95bdcf94da1e6bfe840dd13d7068aaa25388c" }
