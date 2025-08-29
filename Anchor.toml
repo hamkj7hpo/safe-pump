@@ -1,0 +1,10 @@
+[toolchain]
+anchor_version = "0.31.0"
+solana_version = "2.3.6"
+
+[programs.devnet]
+safe_pump = "AymD4HzxTN2SK6UDrCcXD2uAFk4RptvQKzMT5P9GSr32"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/safe-pump/.config/solana/id.json"

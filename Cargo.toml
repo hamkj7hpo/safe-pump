@@ -7,17 +7,17 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-discriminator" }
-anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "5cf7738000adea3e58cae5fd99dd66ea045a9c31", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "5cf7738000adea3e58cae5fd99dd66ea045a9c31", features = ["memo"] }
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "5208a7870826307290c30b7d80768f40267433a1" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", features = ["init-if-needed"] }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", features = ["memo"] }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", features = ["no-entrypoint"] }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
-spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "decb8c063443bbd67ad7d00e7fbfab3a76029620", package = "spl-token-group-interface" }
-spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "fcb4a1c79576a6d4eb8dea8dd38b370529dda008", package = "spl-token-metadata-interface" }
-spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "7be529916806e8693d6fb2622db31e5d463e9f79", package = "spl-transfer-hook-interface" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
+spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
+spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }
+spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "main" }
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "7231bf2a86b4ba6ead745e5ada7b163a8d8ed66d", package = "solana-zk-sdk" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
@@ -30,6 +30,10 @@ cpi = []
 overflow-checks = true
 
 [patch.crates-io]
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "0ff7d641b198149f6e0b1265e85b7258db87e254" }
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f81cfea71b4b961e1c7daf82d8f307ad9b3bc194", package = "spl-discriminator" }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat" }
+spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token" }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo" }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat" }
