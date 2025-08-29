@@ -137,7 +137,7 @@ if test -f $project_toml
     echo "Patching $project_toml for spl-token and anchor-spl..."
     # Remove all anchor-spl and spl-token entries from [patch.crates-io]
     sed -i '/anchor-spl = {.*}/d' $project_toml
-    sed -i '/spl-token = {.*solana-program-library.*}/d' $project_toml
+    sed -i '/spl-token = {.*}/d' $project_toml
     # Update anchor-spl in [dependencies]
     sed -i 's|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat".*}|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }|' $project_toml
     # Add anchor-spl to [patch.crates-io] only once
@@ -163,7 +163,7 @@ if test -f $project_toml
     # Commit and push changes
     cd $project_dir
     git add Cargo.toml setup.fish
-    git commit -m "Fix duplicate anchor-spl, remove spl-token from crates-io, and clean up spl-type-length-value" || true
+    git commit -m "Fix spl-token patch conflict and ensure single anchor-spl entry" || true
     git push origin main
     if test $status -ne 0
         echo "Failed to push changes to safe_pump project"
@@ -178,7 +178,10 @@ end
 # Step 5: Clean and build with verbose output
 echo "Cleaning and building project..."
 cd $project_dir
-rm -rf Cargo.lock target ~/.cargo/git/checkouts/*
+rm -rf Cargo.lock target
+if test -d ~/.cargo/git/checkouts
+    rm -rf ~/.cargo/git/checkouts/*
+end
 cargo clean
 cargo update -v
 set -x RUST_LOG debug
