@@ -135,11 +135,17 @@ end
 set -l project_toml $project_dir/Cargo.toml
 if test -f $project_toml
     echo "Patching $project_toml for spl-token and anchor-spl..."
-    # Remove spl-token from [patch.crates-io]
+    # Remove all anchor-spl and spl-token entries from [patch.crates-io]
+    sed -i '/anchor-spl = {.*}/d' $project_toml
     sed -i '/spl-token = {.*solana-program-library.*}/d' $project_toml
-    # Update anchor-spl to disable default-features
-    sed -i 's|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }|' $project_toml
-    sed -i '/\[patch.crates-io\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }' $project_toml
+    # Update anchor-spl in [dependencies]
+    sed -i 's|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat".*}|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }|' $project_toml
+    # Add anchor-spl to [patch.crates-io] only once
+    if not grep -q "anchor-spl =.*safe-pump-compat" $project_toml
+        sed -i '/\[patch.crates-io\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }' $project_toml
+    else
+        echo "anchor-spl patch already exists in $project_toml"
+    end
     # Ensure [patch."https://github.com/hamkj7hpo/solana-program-library.git"] exists
     if not grep -q "\[patch.\"https://github.com/hamkj7hpo/solana-program-library.git\"\]" $project_toml
         echo -e "\n[patch.\"https://github.com/hamkj7hpo/solana-program-library.git\"]\nspl-token = { git = \"https://github.com/hamkj7hpo/solana-program-library.git\", branch = \"$branch\", package = \"spl-token\", features = [\"no-entrypoint\"] }" >> $project_toml
@@ -148,12 +154,16 @@ if test -f $project_toml
     else
         echo "spl-token patch with no-entrypoint already exists in $project_toml"
     end
+    # Remove unintended spl-type-length-value repository
+    if test -d $project_dir/spl-type-length-value
+        echo "Removing unintended spl-type-length-value repository..."
+        git rm -r --cached spl-type-length-value 2>/dev/null
+        rm -rf $project_dir/spl-type-length-value
+    end
     # Commit and push changes
     cd $project_dir
-    # Stage all changes, including untracked files
-    git add Cargo.toml
-    git add -A
-    git commit -m "Update Cargo.toml to fix spl-token patch and disable anchor-spl default features" || true
+    git add Cargo.toml setup.fish
+    git commit -m "Fix duplicate anchor-spl, remove spl-token from crates-io, and clean up spl-type-length-value" || true
     git push origin main
     if test $status -ne 0
         echo "Failed to push changes to safe_pump project"
