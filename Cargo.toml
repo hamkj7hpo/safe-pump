@@ -17,7 +17,7 @@ solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "sa
 
 # SPL Utilities
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
 
 # SPL Interfaces
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
@@ -35,7 +35,7 @@ raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", br
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
 zeroize = "1.0.0"
-base64ct = "1.6.0"  # Pinned to avoid edition2024 requirement
+base64ct = "1.6.0"
 
 [features]
 cpi = []
@@ -43,23 +43,24 @@ cpi = []
 [profile.release]
 overflow-checks = true
 
+# ----- Patches -----
 [patch.crates-io]
-# Anchor
+# Ensure all dependencies use safe-pump compatible forks
 anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", default-features = false }
-
-# Solana + SPL
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
 
-[patch."https://github.com/hamkj7hpo/token-2022.git"]
-spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
+# Force spl-pod to use the patched solana-zk-sdk
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 
-[patch."https://github.com/hamkj7hpo/solana-program-library.git"]
+# Explicit patch for spl-pod dependency
+[patch."https://github.com/hamkj7hpo/spl-pod.git"]
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", version = "6.0.0" }
 
 [patch.crates-io]
