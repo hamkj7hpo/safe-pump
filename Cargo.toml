@@ -61,3 +61,6 @@ spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-va
 
 [patch."https://github.com/hamkj7hpo/solana-program-library.git"]
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", version = "6.0.0" }
+
+[patch.crates-io]
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }
