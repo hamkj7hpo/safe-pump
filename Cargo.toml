@@ -27,7 +27,7 @@ spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hoo
 
 # SPL Tokens
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
-spl-type-length-value = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "625b5f878", package = "spl-type-length-value" }
+spl-type-length-value = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "5328db5", package = "spl-type-length-value" }
 
 # ZK & CP Swap
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
