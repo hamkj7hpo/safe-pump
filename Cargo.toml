@@ -16,7 +16,7 @@ spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 
 # SPL Utilities
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator", rev = "625b5f878" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "625b5f878", package = "spl-discriminator" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
 
@@ -27,7 +27,7 @@ spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hoo
 
 # SPL Tokens
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
-spl-type-length-value = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-type-length-value", rev = "625b5f878" }
+spl-type-length-value = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "625b5f878", package = "spl-type-length-value" }
 
 # ZK & CP Swap
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
@@ -52,10 +52,10 @@ anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-p
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", default-features = false }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator", rev = "625b5f878" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "625b5f878", package = "spl-discriminator" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
-spl-type-length-value = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-type-length-value", rev = "625b5f878" }
+spl-type-length-value = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "625b5f878", package = "spl-type-length-value" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 
 [patch."https://github.com/hamkj7hpo/spl-pod.git"]
