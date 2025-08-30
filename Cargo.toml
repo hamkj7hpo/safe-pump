@@ -1,3 +1,103 @@
+safe-pump@192 /v/w/h/p/safe_pump (main)> cd /tmp/solana-program-library/
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> nano governance/chat/program/Cargo.toml
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> cd ../
+safe-pump@192 /tmp> cd solana-program-library/
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> nano managed-token/program/Cargo.toml
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> git status
+On branch safe-pump-compat
+Your branch is up to date with 'origin/safe-pump-compat'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   governance/addin-mock/program/Cargo.toml
+	modified:   governance/chat/program/Cargo.toml
+	modified:   governance/program/Cargo.toml
+	modified:   managed-token/program/Cargo.toml
+	modified:   stateless-asks/program/Cargo.toml
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	dedupe.fish
+
+no changes added to commit (use "git add" and/or "git commit -a")
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> rm dedupe.fish
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> git add managed-token/program/Cargo.toml
+                                                            git add governance/chat/program/Cargo.toml
+
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> git commit -m "Fix Cargo.toml dependency formatting for safe-pump-compat branch"
+
+[safe-pump-compat 625b5f878] Fix Cargo.toml dependency formatting for safe-pump-compat branch
+ 2 files changed, 40 insertions(+), 42 deletions(-)
+ rewrite managed-token/program/Cargo.toml (60%)
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> git push origin safe-pump-compat
+
+Enumerating objects: 16, done.
+Counting objects: 100% (16/16), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (9/9), done.
+Writing objects: 100% (9/9), 1.14 KiB | 1.14 MiB/s, done.
+Total 9 (delta 4), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (4/4), completed with 3 local objects.
+To github.com:hamkj7hpo/solana-program-library.git
+   082228ff6..625b5f878  safe-pump-compat -> safe-pump-compat
+safe-pump@192 /t/solana-program-library (safe-pump-compat)> cd /var/www/html/program/safe_pump
+safe-pump@192 /v/w/h/p/safe_pump (main)> cargo update
+    Updating git repository `https://github.com/hamkj7hpo/zk-elgamal-proof.git`
+    Updating git repository `https://github.com/hamkj7hpo/memo.git`
+warning: patch for `anchor-spl` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+    Updating git repository `https://github.com/hamkj7hpo/anchor.git`
+    Updating git repository `https://github.com/hamkj7hpo/solana.git`
+warning: patch for `spl-associated-token-account` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+    Updating git repository `https://github.com/hamkj7hpo/associated-token-account.git`
+    Updating git repository `https://github.com/hamkj7hpo/solana-program-library.git`
+remote: Enumerating objects: 16, done.
+remote: Counting objects: 100% (16/16), done.
+remote: Compressing objects: 100% (5/5), done.
+remote: Total 9 (delta 4), reused 9 (delta 4), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 1.12 KiB | 1.12 MiB/s, done.
+From github.com:hamkj7hpo/solana-program-library
+   082228ff6..625b5f878  safe-pump-compat -> origin/safe-pump-compat
+error: duplicate key
+  --> ../../../../../home/safe-pump/.cargo/git/checkouts/solana-program-library-aa14ed01032526f4/625b5f8/governance/addin-mock/program/Cargo.toml:12:1
+   |
+12 | no-entrypoint = []
+   | ^^^^^^^^^^^^^
+   |
+error: duplicate key
+  --> ../../../../../home/safe-pump/.cargo/git/checkouts/solana-program-library-aa14ed01032526f4/625b5f8/governance/program/Cargo.toml:12:1
+   |
+12 | no-entrypoint = []
+   | ^^^^^^^^^^^^^
+   |
+error: duplicate key
+  --> ../../../../../home/safe-pump/.cargo/git/checkouts/solana-program-library-aa14ed01032526f4/625b5f8/stateless-asks/program/Cargo.toml:11:1
+   |
+11 | no-entrypoint = []
+   | ^^^^^^^^^^^^^
+   |
+warning: patch for `spl-pod` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+    Updating git repository `https://github.com/hamkj7hpo/spl-pod.git`
+warning: patch for `spl-token-2022` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+    Updating git repository `https://github.com/hamkj7hpo/token-2022.git`
+    Updating git repository `https://github.com/hamkj7hpo/spl-type-length-value.git`
+    Updating crates.io index
+    Updating git repository `https://github.com/hamkj7hpo/raydium-cp-swap.git`
+    Updating git repository `https://github.com/hamkj7hpo/token-group.git`
+    Updating git repository `https://github.com/hamkj7hpo/token-metadata.git`
+    Updating git repository `https://github.com/hamkj7hpo/transfer-hook.git`
+    Updating git repository `https://github.com/hamkj7hpo/anchor.git`
+    Updating git repository `https://github.com/hamkj7hpo/solana.git`
+    Updating git repository `https://github.com/hamkj7hpo/spl-pod.git`
+    Updating git repository `https://github.com/hamkj7hpo/solana-program-library.git`
+    Updating git repository `https://github.com/hamkj7hpo/anchor.git`
+    Updating git repository `https://github.com/hamkj7hpo/associated-token-account.git`
+     Locking 3 packages to latest compatible versions
+    Updating spl-discriminator v0.4.1 (https://github.com/hamkj7hpo/solana-program-library.git?branch=safe-pump-compat#082228ff) -> #625b5f87
+    Updating spl-program-error v0.4.2 (https://github.com/hamkj7hpo/solana-program-library.git?branch=safe-pump-compat#082228ff) -> #625b5f87
+    Updating spl-token v4.0.0 (https://github.com/hamkj7hpo/solana-program-library.git?branch=safe-pump-compat#082228ff) -> #625b5f87
+note: pass `--verbose` to see 5 unchanged dependencies behind latest
+safe-pump@192 /v/w/h/p/safe_pump (main)> cat Cargo.toml
 [package]
 name = "safe_pump"
 version = "0.1.0"
@@ -18,6 +118,7 @@ solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "sa
 # SPL Utilities
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
 
 # SPL Interfaces
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
@@ -51,17 +152,12 @@ spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
-spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo" }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
-
-# Force spl-pod to use the patched solana-zk-sdk
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 
-# Explicit patch for spl-pod dependency
 [patch."https://github.com/hamkj7hpo/spl-pod.git"]
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
-spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", version = "6.0.0" }
-
-[patch.crates-io]
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
+safe-pump@192 /v/w/h/p/safe_pump (main)> 
