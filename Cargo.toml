@@ -60,3 +60,4 @@ spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-va
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
 
 [patch."https://github.com/hamkj7hpo/solana-program-library.git"]
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", version = "6.0.0" }
