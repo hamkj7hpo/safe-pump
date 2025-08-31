@@ -2,42 +2,30 @@
 name = "safe_pump"
 version = "0.1.0"
 edition = "2021"
+resolver = "2"
 
 [lib]
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-# Anchor
-anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
-spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", default-features = false }
-
-# Solana
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-
-# SPL Utilities
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "29865960ec86579ad40fcd1b3cb9d5a6d81b5401", features = ["init-if-needed"] }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "29865960ec86579ad40fcd1b3cb9d5a6d81b5401", default-features = false }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "e8d16e4e762e9ff008fc0c3da2e997b2f949a727", default-features = false }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "bcc398b87fbe0905d1a847cb94a264ecfaa5e95d" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f86fefd752bc4ca50adc8f06cd9ba579326c769e", package = "spl-discriminator" }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
-spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
-
-# SPL Interfaces
-spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
-spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }
-spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }
-
-# SPL Tokens
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "5d5ef3ff0e782dc6b22ddc15d08caa05e173abeb", default-features = false }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
+spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "decb8c063443bbd67ad7d00e7fbfab3a76029620", package = "spl-token-group-interface" }
+spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "fcb4a1c79576a6d4eb8dea8dd38b370529dda008", package = "spl-token-metadata-interface" }
+spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "7be529916806e8693d6fb2622db31e5d463e9f79", package = "spl-transfer-hook-interface" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "f399f905a33df92ff629fc397b73bdc10decc064", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "5328db539266002834f15d0ae8881a61d99d78e9", package = "spl-type-length-value" }
-
-# ZK & CP Swap
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
-raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", default-features = false, features = ["cpi"] }
-
-# Utilities
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "68e73849faecf2c0cd55abfce8b62379a435949e", package = "solana-zk-sdk" }
+raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "cf35967b103ccfee6d7160e8082769ffd8d7b631", default-features = false, features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
 zeroize = "1.0.0"
-base64ct = "1.6.0"
+base64ct = { version = "=1.6.0" }
 
 [features]
 cpi = []
@@ -45,20 +33,14 @@ cpi = []
 [profile.release]
 overflow-checks = true
 
-# ----- Patches -----
 [patch.crates-io]
-# Ensure all dependencies use safe-pump compatible forks
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
-spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", default-features = false }
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
+spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "29865960ec86579ad40fcd1b3cb9d5a6d81b5401", default-features = false }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "e8d16e4e762e9ff008fc0c3da2e997b2f949a727", default-features = false }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "bcc398b87fbe0905d1a847cb94a264ecfaa5e95d" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "5d5ef3ff0e782dc6b22ddc15d08caa05e173abeb", default-features = false }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f86fefd752bc4ca50adc8f06cd9ba579326c769e", package = "spl-discriminator" }
-spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "a095a91240c7d0e413ea1b710d354edfb704e3fd", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "5328db539266002834f15d0ae8881a61d99d78e9", package = "spl-type-length-value" }
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
-base64ct = { version = "=1.6.0" }
-
-[patch."https://github.com/hamkj7hpo/spl-pod.git"]
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
-spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "68e73849faecf2c0cd55abfce8b62379a435949e", package = "solana-zk-sdk" }
