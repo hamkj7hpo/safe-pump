@@ -46,4 +46,4 @@ spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-tlv-account-resolution" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "f1cbced89e36485555c27379c9493781c7954d03", package = "solana-zk-sdk" }
-curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek.git", rev = "0e1d6b66e5c1f13d7b1e508f93e52a8c0d3d5b08" }  # Commit for 3.2.1
+curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek.git", rev = "86f0d083e1a09dd7856a0b7721ad7d36987027d2" }  # Commit for 3.2.1
