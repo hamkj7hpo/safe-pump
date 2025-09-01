@@ -20,7 +20,7 @@ spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metad
 spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "7be529916806e8693d6fb2622db31e5d463e9f79", package = "spl-transfer-hook-interface" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e65bc7ef9b22a5f0765c22e4b2ae4b3652bc2b6", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-type-length-value" }
-spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "xyz123...", package = "spl-tlv-account-resolution" }
+spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "54e0ee43b27b5e9700a9f12f7333e0f25a45f473", package = "spl-tlv-account-resolution" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "a8db090469381a6f2aff11ce0d9b5673f85698fe", package = "raydium-cp-swap-workspace", default-features = false }
 bytemuck = { version = "1.18.0", features = ["derive"] }
@@ -44,5 +44,5 @@ spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e65bc7ef9b22a5f0765c22e4b2ae4b3652bc2b6", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-type-length-value" }
-spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "xyz123...", package = "spl-tlv-account-resolution" }
+spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "54e0ee43b27b5e9700a9f12f7333e0f25a45f473", package = "spl-tlv-account-resolution" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
