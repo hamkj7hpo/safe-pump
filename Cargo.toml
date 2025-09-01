@@ -8,8 +8,8 @@ resolver = "2"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "29865960ec86579ad40fcd1b3cb9d5a6d81b5401", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", default-features = false }
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", features = ["init-if-needed"] }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "e8d16e4e762e9ff008fc0c3da2e997b2f949a727", default-features = false }
 solana-program = { git = "https://github.com/solana-labs/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f86fefd752bc4ca50adc8f06cd9ba579326c769e", package = "spl-discriminator" }
@@ -36,7 +36,7 @@ overflow-checks = true
 
 [patch.crates-io]
 spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", default-features = false }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "e8d16e4e762e9ff008fc0c3da2e997b2f949a727", default-features = false }
 solana-program = { git = "https://github.com/solana-labs/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "2a06f4de210a65d19e141e10da02148ab88479d1", default-features = false }
