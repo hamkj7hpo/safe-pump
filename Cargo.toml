@@ -36,7 +36,7 @@ overflow-checks = true
 
 [patch.crates-io]
 spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", default-features = false }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", default-features = false, dependencies = { solana-program = { git = "https://github.com/solana-labs/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" } } }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "b3d848abe4028ced56b20aaa62edff1c9af3fa17", default-features = false }
 solana-program = { git = "https://github.com/solana-labs/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "2a06f4de210a65d19e141e10da02148ab88479d1", default-features = false }
