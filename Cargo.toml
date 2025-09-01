@@ -22,7 +22,7 @@ spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-tlv-account-resolution" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
-raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "ae16d905d3608abea40cf43b446bf549e412ad25", package = "raydium-cp-swap-workspace", default-features = false, features = ["cpi"] }
+raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "ae16d905d3608abea40cf43b446bf549e412ad25", package = "raydium-cp-swap-workspace", default-features = false }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
 zeroize = "1.0.0"
