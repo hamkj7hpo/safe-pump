@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "29865960ec86579ad40fcd1b3cb9d5a6d81b5401", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "926bbc732886ed53f4f0328f06eb4269a38b1c4b", default-features = false }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "e8d16e4e762e9ff008fc0c3da2e997b2f949a727", default-features = false }
 solana-program = { git = "https://github.com/solana-labs/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "f86fefd752bc4ca50adc8f06cd9ba579326c769e", package = "spl-discriminator" }
@@ -22,7 +22,7 @@ spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "4b3bbe88bfdea370b16e20b96e5145035580d2c6", package = "spl-tlv-account-resolution" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
-raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "b6f911ae55fffb41aa4e4eb311978fd3c4213d0a", default-features = false, features = ["cpi"] }
+raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "9d10bfa35b9d9bfd7455acd5e14090a4f6a84ee9", default-features = false, features = ["cpi"] }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
 zeroize = "1.0.0"
@@ -36,7 +36,7 @@ overflow-checks = true
 
 [patch.crates-io]
 spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "926bbc732886ed53f4f0328f06eb4269a38b1c4b", default-features = false }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "e8d16e4e762e9ff008fc0c3da2e997b2f949a727", default-features = false }
 solana-program = { git = "https://github.com/solana-labs/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "2a06f4de210a65d19e141e10da02148ab88479d1", default-features = false }
