@@ -15,7 +15,7 @@ solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "b1e37
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
-spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "decb8c063443bbd67ad7d00e7fbfab3a76029620", package = "spl-token-group-interface" }
+spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "e99eb2688b28289559084a2d1d0691e76f02de12", package = "spl-token-group-interface" }
 spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "fcb4a1c79576a6d4eb8dea8dd38b370529dda008", package = "spl-token-metadata-interface" }
 spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "7be529916806e8693d6fb2622db31e5d463e9f79", package = "spl-transfer-hook-interface" }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
