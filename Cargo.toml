@@ -8,21 +8,21 @@ resolver = "2"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", default-features = false }
+anchor.*git.*rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", features = ["init-if-needed"] }
+anchor.*git.*rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "b3d848abe4028ced56b20aaa62edff1c9af3fa17", default-features = false }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
+spl-pod.*git.*rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "e99eb2688b28289559084a2d1d0691e76f02de12", package = "spl-token-group-interface" }
-spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "fcb4a1c79576a6d4eb8dea8dd38b370529dda008", package = "spl-token-metadata-interface" }
-spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "7be529916806e8693d6fb2622db31e5d463e9f79", package = "spl-transfer-hook-interface" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
-spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
-spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
-raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "a8db090469381a6f2aff11ce0d9b5673f85698fe", package = "raydium-cp-swap-workspace", default-features = false }
+spl-token-metadata.*git.*rev = "9f2d6e33950635a2934101c2ee36cef62affa4b8", package = "spl-token-metadata-interface" }
+spl-transfer-hook.*git.*rev = "a848a0fdcf10d026a328feb798ca0a5e7f03a4c6", package = "spl-transfer-hook-interface" }
+spl-token-2022.*git.*rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
+spl-type-length-value.*git.*rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
+spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.*git.*rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.*git.*rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
+raydium-cp-swap.*git.*rev = "a8db090469381a6f2aff11ce0d9b5673f85698fe", package = "raydium-cp-swap-workspace", default-features = false }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
 zeroize = "1.0.0"
@@ -36,12 +36,12 @@ overflow-checks = true
 
 [patch.crates-io]
 spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e6d7dafe12da661a36ad1b4f3b5970e8986e5321", default-features = false }
+anchor.*git.*rev = "76b4be2c1c56b3bebabc8aee4be199d7ef7feea0", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "b3d848abe4028ced56b20aaa62edff1c9af3fa17", default-features = false }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
+spl-pod.*git.*rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
-spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
-spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
+spl-token-2022.*git.*rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
+spl-type-length-value.*git.*rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
+spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.*git.*rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.*git.*rev = "dbf35cedc6fc54f9773b99271bd50f4e89555293", package = "solana-zk-sdk" }
