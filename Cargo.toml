@@ -8,8 +8,8 @@ resolver = "2"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "6e907e7a879bc60b42693c522b74b63379d5cbd3", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "6e907e7a879bc60b42693c522b74b63379d5cbd3", default-features = false }
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e7594e2c42d86ad6d291516fc1c952ecd7ebca13", features = ["init-if-needed"] }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e7594e2c42d86ad6d291516fc1c952ecd7ebca13", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "b3d848abe4028ced56b20aaa62edff1c9af3fa17", default-features = false }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
@@ -36,7 +36,7 @@ overflow-checks = true
 
 [patch.crates-io]
 spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "6e907e7a879bc60b42693c522b74b63379d5cbd3", default-features = false }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "e7594e2c42d86ad6d291516fc1c952ecd7ebca13", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "b3d848abe4028ced56b20aaa62edff1c9af3fa17", default-features = false }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
