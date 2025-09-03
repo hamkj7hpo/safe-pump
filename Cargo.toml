@@ -21,7 +21,7 @@ spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hoo
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "1860be9165f2fb2a6ae2b609e4a52519ac68fe73", package = "solana-zk-sdk" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "23b6956ab6b9b8a2797540e41023f51ee8c2d491", package = "solana-zk-sdk" }
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "a8db090469381a6f2aff11ce0d9b5673f85698fe", package = "raydium-cp-swap-workspace", default-features = false }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
@@ -44,4 +44,4 @@ spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad26
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8e144b86584412066fb9132bade29f66a5751639", package = "spl-token-2022", default-features = false }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "1860be9165f2fb2a6ae2b609e4a52519ac68fe73", package = "solana-zk-sdk" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "23b6956ab6b9b8a2797540e41023f51ee8c2d491", package = "solana-zk-sdk" }
