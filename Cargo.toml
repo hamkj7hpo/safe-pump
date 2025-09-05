@@ -11,7 +11,7 @@ crate-type = ["cdylib", "lib"]
 anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "597fc831a5dd752520d95448366a7d6f0d2a0ee1", features = ["init-if-needed"] }
 anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "597fc831a5dd752520d95448366a7d6f0d2a0ee1", default-features = false }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "cb4047956ff0830ca864b31dfdec07bb98bea452", default-features = false }
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "b1e378009ffee4c75965723d3317fccbebcf2524" }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-program" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "21076d1f65fb52c40f53feaea14b44dc8f0ce8a5", default-features = false }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
@@ -25,7 +25,7 @@ solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", rev = "a8db090469381a6f2aff11ce0d9b5673f85698fe", package = "raydium-cp-swap-workspace", default-features = false }
 bytemuck = { version = "1.18.0", features = ["derive"] }
 bincode = "1.3.3"
-zeroize = "1.0.0"
+zeroize = "1.8.0"
 base64ct = { version = "=1.6.0" }
 
 [features]
@@ -45,3 +45,6 @@ spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "8
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "23b6956ab6b9b8a2797540e41023f51ee8c2d491", package = "solana-zk-sdk" }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-program" }
+solana-sdk = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-sdk" }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }

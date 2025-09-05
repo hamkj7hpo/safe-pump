@@ -1,194 +1,86 @@
 #!/usr/bin/env fish
 
-set -l repos \
-    "anchor" \
-    "solana" \
-    "associated-token-account" \
-    "solana-program-library" \
-    "memo" \
-    "spl-pod" \
-    "token-2022" \
-    "spl-type-length-value" \
-    "raydium-cp-swap" \
-    "zk-elgamal-proof" \
-    "token-group" \
-    "token-metadata" \
-    "transfer-hook"
+# Diagnostic script for safe_pump and curve25519-dalek dependency alignment
+set SAFE_PUMP_DIR "/var/www/html/program/safe_pump"
+set CURVE_DALEK_DIR "/tmp/deps/curve25519-dalek"
+set OUTPUT_FILE "/tmp/safe_pump_diagnostic_report.txt"
 
-set -l tmp_dir /tmp
-set -l project_dir /var/www/html/program/safe_pump
-set -l branch safe-pump-compat
-
-# Ensure git is configured for pushing
-echo "Checking git configuration..."
-if not git config user.name >/dev/null || not git config user.email >/dev/null
-    echo "Git user.name or user.email not set. Please configure git:"
-    echo "  git config --global user.name 'Your Name'"
-    echo "  git config --global user.email 'your.email@example.com'"
-    exit 1
+# Function to print section headers
+function print_section
+    echo "===== $argv[1] =====" >> $OUTPUT_FILE
+    echo $argv[1]
 end
 
-# Step 1: Clone repositories and ensure safe-pump-compat branch
-for repo in $repos
-    set -l repo_url https://github.com/hamkj7hpo/$repo.git
-    set -l target_dir $tmp_dir/$repo
-    echo "Processing $repo into $target_dir..."
+# Initialize output file
+echo "Safe Pump and Curve25519-Dalek Diagnostic Report" > $OUTPUT_FILE
+echo "Generated on: "(date) >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-    # Clone if not exists
-    if test -d $target_dir
-        echo "$target_dir already exists, updating..."
-        cd $target_dir
-        git fetch origin
-    else
-        echo "Cloning $repo_url..."
-        git clone $repo_url $target_dir
-        if test $status -ne 0
-            echo "Failed to clone $repo_url"
-            exit 1
-        end
-        cd $target_dir
-    end
+# 1. Check git status for safe_pump
+print_section "Git Status: safe_pump ($SAFE_PUMP_DIR)"
+cd $SAFE_PUMP_DIR
+git status >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-    # Check for safe-pump-compat branch
-    if git rev-parse --verify origin/$branch >/dev/null 2>&1
-        echo "Checking out existing $branch for $repo..."
-        git checkout $branch
-        git pull origin $branch
-    else
-        echo "Creating new $branch for $repo..."
-        git checkout -b $branch
-        git push origin $branch
-        if test $status -ne 0
-            echo "Failed to push $branch to $repo_url"
-            exit 1
-        end
-    end
-    cd -
-end
+# 2. Check current commit for safe_pump
+print_section "Current Commit: safe_pump"
+git log -1 --pretty=%H%n%s%n%an%n%ad >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-# Step 2: Find and patch solana-program-library Cargo.toml for spl-token
-set -l spl_dir $tmp_dir/solana-program-library
-set -l spl_token_toml ""
-if test -f $spl_dir/token/program/Cargo.toml
-    set spl_token_toml $spl_dir/token/program/Cargo.toml
-else if test -f $spl_dir/token/Cargo.toml
-    set spl_token_toml $spl_dir/token/Cargo.toml
-else
-    echo "Error: Could not find spl-token Cargo.toml in $spl_dir/token/program or $spl_dir/token"
-    exit 1
-end
-echo "Found spl-token Cargo.toml at $spl_token_toml"
+# 3. Check git status for curve25519-dalek
+print_section "Git Status: curve25519-dalek ($CURVE_DALEK_DIR)"
+cd $CURVE_DALEK_DIR
+git status >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-# Add no-entrypoint feature
-echo "Patching $spl_token_toml for no-entrypoint feature..."
-if not grep -q 'no-entrypoint =' $spl_token_toml
-    echo "Adding no-entrypoint feature..."
-    if not grep -q "\[features\]" $spl_token_toml
-        echo -e "\n[features]\nno-entrypoint = []" >> $spl_token_toml
-    else
-        sed -i '/\[features\]/a no-entrypoint = []' $spl_token_toml
-    end
-    # Commit and push changes
-    cd $spl_dir
-    git add token/Cargo.toml
-    git commit -m "Add no-entrypoint feature to spl-token" || true
-    git push origin $branch
-    if test $status -ne 0
-        echo "Failed to push changes to solana-program-library"
-        exit 1
-    end
-    cd -
-else
-    echo "no-entrypoint feature already present in $spl_token_toml"
-end
+# 4. Check current commit for curve25519-dalek
+print_section "Current Commit: curve25519-dalek"
+git log -1 --pretty=%H%n%s%n%an%n%ad >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-# Step 3: Patch anchor/spl/Cargo.toml
-set -l anchor_spl_toml $tmp_dir/anchor/spl/Cargo.toml
-if test -f $anchor_spl_toml
-    echo "Patching $anchor_spl_toml to add no-entrypoint feature for spl-token..."
-    if not grep -q 'spl-token =.*no-entrypoint' $anchor_spl_toml
-        set -l current_line (grep 'spl-token =' $anchor_spl_toml)
-        if test -n "$current_line"
-            sed -i "s|$current_line|spl-token = { git = \"https://github.com/hamkj7hpo/solana-program-library.git\", branch = \"$branch\", package = \"spl-token\", features = [\"no-entrypoint\"] }|" $anchor_spl_toml
-        else
-            echo "spl-token = { git = \"https://github.com/hamkj7hpo/solana-program-library.git\", branch = \"$branch\", package = \"spl-token\", features = [\"no-entrypoint\"] }" >> $anchor_spl_toml
-        end
-        # Commit and push changes
-        cd $tmp_dir/anchor
-        git add spl/Cargo.toml
-        git commit -m "Add no-entrypoint feature to spl-token in anchor-spl" || true
-        git push origin $branch
-        if test $status -ne 0
-            echo "Failed to push changes to anchor"
-            exit 1
-        end
-        cd -
-    else
-        echo "spl-token already has no-entrypoint feature in $anchor_spl_toml"
-    end
-else
-    echo "Error: $anchor_spl_toml not found"
-    exit 1
-end
+# 5. Check dependency tree for curve25519-dalek
+print_section "Dependency Tree: curve25519-dalek"
+cargo tree >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-# Step 4: Patch project Cargo.toml
-set -l project_toml $project_dir/Cargo.toml
-if test -f $project_toml
-    echo "Patching $project_toml for spl-token and anchor-spl..."
-    # Remove all anchor-spl and spl-token entries from [patch.crates-io]
-    sed -i '/anchor-spl = {.*}/d' $project_toml
-    sed -i '/spl-token = {.*}/d' $project_toml
-    # Update anchor-spl in [dependencies]
-    sed -i 's|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat".*}|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }|' $project_toml
-    # Add anchor-spl to [patch.crates-io] only once
-    if not grep -q "anchor-spl =.*safe-pump-compat" $project_toml
-        sed -i '/\[patch.crates-io\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }' $project_toml
-    else
-        echo "anchor-spl patch already exists in $project_toml"
-    end
-    # Ensure [patch."https://github.com/hamkj7hpo/solana-program-library.git"] exists
-    if not grep -q "\[patch.\"https://github.com/hamkj7hpo/solana-program-library.git\"\]" $project_toml
-        echo -e "\n[patch.\"https://github.com/hamkj7hpo/solana-program-library.git\"]\nspl-token = { git = \"https://github.com/hamkj7hpo/solana-program-library.git\", branch = \"$branch\", package = \"spl-token\", features = [\"no-entrypoint\"] }" >> $project_toml
-    else if not grep -q "spl-token =.*no-entrypoint" $project_toml
-        sed -i "/\[patch.\"https:\/\/github.com\/hamkj7hpo\/solana-program-library.git\"\]/a spl-token = { git = \"https://github.com/hamkj7hpo/solana-program-library.git\", branch = \"$branch\", package = \"spl-token\", features = [\"no-entrypoint\"] }" $project_toml
-    else
-        echo "spl-token patch with no-entrypoint already exists in $project_toml"
-    end
-    # Remove unintended spl-type-length-value repository
-    if test -d $project_dir/spl-type-length-value
-        echo "Removing unintended spl-type-length-value repository..."
-        git rm -r --cached spl-type-length-value 2>/dev/null
-        rm -rf $project_dir/spl-type-length-value
-    end
-    # Commit and push changes
-    cd $project_dir
-    git add Cargo.toml setup.fish
-    git commit -m "Fix spl-token patch conflict and ensure single anchor-spl entry" || true
-    git push origin main
-    if test $status -ne 0
-        echo "Failed to push changes to safe_pump project"
-        exit 1
-    end
-    cd -
-else
-    echo "Error: $project_toml not found"
-    exit 1
-end
+# 6. Check dependency tree for safe_pump
+print_section "Dependency Tree: safe_pump"
+cd $SAFE_PUMP_DIR
+cargo tree >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
 
-# Step 5: Clean and build with verbose output
-echo "Cleaning and building project..."
-cd $project_dir
-rm -rf Cargo.lock target
-if test -d ~/.cargo/git/checkouts
-    rm -rf ~/.cargo/git/checkouts/*
-end
-cargo clean
-cargo update -v
-set -x RUST_LOG debug
-cargo build-sbf -- --release
-if test $status -eq 0
-    echo "Build successful!"
-else
-    echo "Build failed, check output for errors."
-    exit 1
-end
+# 7. Check inverse dependency tree for curve25519-dalek in safe_pump
+print_section "Inverse Dependency Tree for curve25519-dalek in safe_pump"
+cargo tree --invert curve25519-dalek >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# 8. Check for cargo conflicts in safe_pump
+print_section "Cargo Dependency Check: safe_pump"
+cargo check 2>> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# 9. Check Cargo.toml for safe_pump
+print_section "Cargo.toml: safe_pump"
+cat $SAFE_PUMP_DIR/Cargo.toml >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# 10. Check Cargo.toml for curve25519-dalek
+print_section "Cargo.toml: curve25519-dalek"
+cat $CURVE_DALEK_DIR/curve25519-dalek/Cargo.toml >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# 11. Check for uncommitted changes in safe-pump-compat-v2 branch
+print_section "Uncommitted Changes in safe-pump-compat-v2 (curve25519-dalek)"
+cd $CURVE_DALEK_DIR
+git diff origin/safe-pump-compat-v2 >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# 12. Check for uncommitted changes in safe_pump main branch
+print_section "Uncommitted Changes in main (safe_pump)"
+cd $SAFE_PUMP_DIR
+git diff origin/main >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# Final message
+echo "Diagnostic report generated at $OUTPUT_FILE"
+cat $OUTPUT_FILE
