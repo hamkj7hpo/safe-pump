@@ -10,7 +10,6 @@ crate-type = ["cdylib", "lib"]
 [dependencies]
 anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", features = ["init-if-needed"] }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-program" }
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
 spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "e99eb2688b28289559084a2d1d0691e76f02de12", package = "spl-token-group-interface" }
 spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "9f2d6e33950635a2934101c2ee36cef62affa4b8", package = "spl-token-metadata-interface" }
@@ -30,13 +29,13 @@ cpi = []
 overflow-checks = true
 
 [patch.crates-io]
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", default-features = false }
 spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
 anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
 spki = { git = "https://github.com/hamkj7hpo/formats.git", rev = "46605c594a44ad514ad05cb5c2b8383ac60b1789" }
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "3c730e545f179fb18b8e0510706ae9019c84974b", package = "spl-discriminator" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "8b68bff69ad2616c511f58c16e7588e8997c076c", package = "spl-memo", version = "6.0.0" }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-type-length-value" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "f88be2a2480bae07e18f2bf5092cc7dea1743d7e", package = "spl-tlv-account-resolution" }
