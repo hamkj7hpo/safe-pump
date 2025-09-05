@@ -324,6 +324,7 @@ if test -f $raydium_toml
     echo "Patching $raydium_toml for solana-program and fixing syntax..."
     # Remove malformed lines and ensure correct formatting
     sed -i '/codegen-units = 1\[patch.crates-io\]/d' $raydium_toml
+    sed -i '/opt-level =/d' $raydium_toml # Extra cleanup for duplicates
     sed -i '/\[profile.release\]/,/^\[.*\]/c\[profile.release]\noverflow-checks = true\nlto = "fat"\ncodegen-units = 1\n\n[profile.release.build-override]\nopt-level = 3\nincremental = false\ncodegen-units = 1\n' $raydium_toml
     sed -i '/solana-program =/d' $raydium_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-program" }' $raydium_toml
@@ -341,15 +342,19 @@ else
     exit 1
 end
 
-# Patch raydium-cp-swap/programs/cp-swap/Cargo.toml for zeroize
+# Patch raydium-cp-swap/programs/cp-swap/Cargo.toml for solana-program, solana-zk-sdk, and zeroize
 set -l raydium_program_toml $tmp_dir/raydium-cp-swap/programs/cp-swap/Cargo.toml
 if test -f $raydium_program_toml
-    echo "Patching $raydium_program_toml for zeroize..."
+    echo "Patching $raydium_program_toml for solana-program, solana-zk-sdk, and zeroize..."
+    sed -i '/solana-program =/d' $raydium_program_toml
+    sed -i '/solana-zk-sdk =/d' $raydium_program_toml
     sed -i '/zeroize =/d' $raydium_program_toml
+    sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-program" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }' $raydium_program_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $raydium_program_toml
     cd $tmp_dir/raydium-cp-swap
     git add programs/cp-swap/Cargo.toml
-    git commit -m "Update zeroize to 1.3.0 in raydium-cp-swap to resolve dependency conflict" || true
+    git commit -m "Update solana-program, solana-zk-sdk, and zeroize to 1.3.0 in raydium-cp-swap to resolve dependency conflict" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to raydium-cp-swap"
