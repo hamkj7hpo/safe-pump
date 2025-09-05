@@ -29,7 +29,6 @@ curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", 
 spki = { git = "https://github.com/hamkj7hpo/formats.git", branch = "safe-pump-compat", package = "spki" }
 spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-type-length-value" }
 spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
-solana-sdk = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-sdk" }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-program" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }
 spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
@@ -38,4 +37,3 @@ spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch =
 solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
 anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
-solana-sdk = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", package = "solana-sdk" }
