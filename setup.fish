@@ -448,6 +448,9 @@ if test -f $project_toml
     sed -i '/zeroize =/d' $project_toml
     sed -i '/spki =/d' $project_toml
     sed -i '/curve25519-dalek =/d' $project_toml
+    sed -i '/bytemuck =/d' $project_toml
+    sed -i '/bincode =/d' $project_toml
+    sed -i '/base64ct =/d' $project_toml
     sed -i '/\[dependencies\]/a anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", features = ["init-if-needed"] }' $project_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $project_toml
     sed -i '/\[dependencies\]/a spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "'$memo_rev'", package = "spl-memo", version = "6.0.0" }' $project_toml
