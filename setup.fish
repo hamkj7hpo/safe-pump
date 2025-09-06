@@ -343,15 +343,33 @@ if test -f $raydium_toml
     sed -i '/solana-zk-sdk/d' $raydium_toml
     sed -i '/zeroize/d' $raydium_toml
     sed -i '/spl-pod/d' $raydium_toml
+    sed -i '/spl-type-length-value/d' $raydium_toml
+    sed -i '/spl-tlv-account-resolution/d' $raydium_toml
+    sed -i '/spl-token-group-interface/d' $raydium_toml
+    sed -i '/spl-token-metadata-interface/d' $raydium_toml
+    sed -i '/spl-transfer-hook-interface/d' $raydium_toml
+    sed -i '/anchor-lang/d' $raydium_toml
+    sed -i '/anchor-spl/d' $raydium_toml
+    sed -i '/spl-token-2022/d' $raydium_toml
+    sed -i '/\[profile.release\]/,/^$/d' $raydium_toml
+    sed -i '/\[profile.release.build-override\]/,/^$/d' $raydium_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $raydium_toml
     sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $raydium_toml
     sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod", default-features = false }' $raydium_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-type-length-value" }' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-tlv-account-resolution" }' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "'$group_rev'", package = "spl-token-group-interface" }' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "'$metadata_rev'", package = "spl-token-metadata-interface" }' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "'$transfer_rev'", package = "spl-transfer-hook-interface" }' $raydium_toml
+    sed -i '/\[dependencies\]/a anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", features = ["init-if-needed"] }' $raydium_toml
+    sed -i '/\[dependencies\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", default-features = false }' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "'$token_rev'", package = "spl-token-2022", default-features = false }' $raydium_toml
     echo -e "\n[profile.release]\noverflow-checks = true\nlto = \"fat\"\ncodegen-units = 1" >> $raydium_toml
     echo -e "\n[profile.release.build-override]\nopt-level = 3\nincremental = false\ncodegen-units = 1" >> $raydium_toml
     cd $tmp_dir/raydium-cp-swap
     git add Cargo.toml
-    git commit -m "Update solana-program, solana-zk-sdk, spl-pod, and zeroize to safe-pump-compat revs" || true
+    git commit -m "Update solana-program, solana-zk-sdk, spl-pod, zeroize, and other dependencies to safe-pump-compat revs" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to raydium-cp-swap"
@@ -373,14 +391,28 @@ if test -f $raydium_program_toml
     sed -i '/zeroize/d' $raydium_program_toml
     sed -i '/spl-token-2022/d' $raydium_program_toml
     sed -i '/spl-pod/d' $raydium_program_toml
+    sed -i '/spl-type-length-value/d' $raydium_program_toml
+    sed -i '/spl-tlv-account-resolution/d' $raydium_program_toml
+    sed -i '/spl-token-group-interface/d' $raydium_program_toml
+    sed -i '/spl-token-metadata-interface/d' $raydium_program_toml
+    sed -i '/spl-transfer-hook-interface/d' $raydium_program_toml
+    sed -i '/anchor-lang/d' $raydium_program_toml
+    sed -i '/anchor-spl/d' $raydium_program_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $raydium_program_toml
     sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $raydium_program_toml
     sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod", default-features = false }' $raydium_program_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $raydium_program_toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "'$token_rev'", package = "spl-token-2022", default-features = false }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-type-length-value" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-tlv-account-resolution" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", rev = "'$group_rev'", package = "spl-token-group-interface" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", rev = "'$metadata_rev'", package = "spl-token-metadata-interface" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", rev = "'$transfer_rev'", package = "spl-transfer-hook-interface" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", features = ["init-if-needed"] }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", features = ["memo"] }' $raydium_program_toml
     cd $tmp_dir/raydium-cp-swap
     git add programs/cp-swap/Cargo.toml
-    git commit -m "Update solana-program, solana-zk-sdk, spl-pod, zeroize, and spl-token-2022 to safe-pump-compat revs" || true
+    git commit -m "Update solana-program, solana-zk-sdk, spl-pod, zeroize, spl-token-2022, and other dependencies to safe-pump-compat revs" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to raydium-cp-swap"
@@ -432,31 +464,24 @@ if test -f $project_toml
     sed -i '/\[dependencies\]/a spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "'$library_rev'", package = "spl-discriminator" }' $project_toml
     sed -i '/\[dependencies\]/a spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-tlv-account-resolution" }' $project_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $project_toml
+    sed -i '/\[dependencies\]/a bytemuck = { version = "1.18.0", features = ["derive"] }' $project_toml
+    sed -i '/\[dependencies\]/a bincode = "1.3.3"' $project_toml
+    sed -i '/\[dependencies\]/a base64ct = { version = "=1.6.0" }' $project_toml
     # Update patch section
-    sed -i '/anchor-spl =.*}/d' $project_toml
-    sed -i '/spl-pod =.*}/d' $project_toml
-    sed -i '/solana-zk-sdk =.*}/d' $project_toml
-    sed -i '/spl-token-2022 =.*}/d' $project_toml
-    sed -i '/spl-associated-token-account =.*}/d' $project_toml
-    sed -i '/spl-discriminator =.*}/d' $project_toml
-    sed -i '/spl-tlv-account-resolution =.*}/d' $project_toml
-    sed -i '/solana-program =.*}/d' $project_toml
-    sed -i '/spl-memo =.*}/d' $project_toml
-    sed -i '/spl-type-length-value =.*}/d' $project_toml
-    sed -i '/spki =.*}/d' $project_toml
-    sed -i '/curve25519-dalek =.*}/d' $project_toml
-    sed -i '/\[patch.crates-io\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", default-features = false }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", default-features = false }' $project_toml
-    sed -i '/\[patch.crates-io\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "'$token_rev'", package = "solana-zk-sdk" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "'$assoc_rev'", default-features = false }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "'$library_rev'", package = "spl-discriminator" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-tlv-account-resolution" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", rev = "'$memo_rev'", package = "spl-memo", version = "6.0.0" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-type-length-value" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spki = { git = "https://github.com/hamkj7hpo/formats.git", branch = "safe-pump-compat", package = "spki" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }' $project_toml
+    sed -i '/\[patch.crates-io\]/,/^$/d' $project_toml
+    echo -e "\n[patch.crates-io]" >> $project_toml
+    echo "curve25519-dalek = { git = \"https://github.com/hamkj7hpo/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\" }" >> $project_toml
+    echo "spki = { git = \"https://github.com/hamkj7hpo/formats.git\", branch = \"safe-pump-compat\", package = \"spki\" }" >> $project_toml
+    echo "spl-type-length-value = { git = \"https://github.com/hamkj7hpo/spl-type-length-value.git\", rev = \"$tlv_rev\", package = \"spl-type-length-value\" }" >> $project_toml
+    echo "spl-memo = { git = \"https://github.com/hamkj7hpo/memo.git\", rev = \"$memo_rev\", package = \"spl-memo\", version = \"6.0.0\" }" >> $project_toml
+    echo "solana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", rev = \"$solana_rev\", package = \"solana-program\" }" >> $project_toml
+    echo "spl-tlv-account-resolution = { git = \"https://github.com/hamkj7hpo/spl-type-length-value.git\", rev = \"$tlv_rev\", package = \"spl-tlv-account-resolution\" }" >> $project_toml
+    echo "spl-discriminator = { git = \"https://github.com/hamkj7hpo/solana-program-library.git\", rev = \"$library_rev\", package = \"spl-discriminator\" }" >> $project_toml
+    echo "spl-associated-token-account = { git = \"https://github.com/hamkj7hpo/associated-token-account.git\", rev = \"$assoc_rev\", default-features = false }" >> $project_toml
+    echo "spl-token-2022 = { git = \"https://github.com/hamkj7hpo/token-2022.git\", rev = \"$token_rev\", package = \"spl-token-2022\", default-features = false }" >> $project_toml
+    echo "solana-zk-sdk = { git = \"https://github.com/hamkj7hpo/zk-elgamal-proof.git\", rev = \"$zk_rev\", package = \"solana-zk-sdk\" }" >> $project_toml
+    echo "spl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", rev = \"$pod_rev\", default-features = false }" >> $project_toml
+    echo "anchor-spl = { git = \"https://github.com/hamkj7hpo/anchor.git\", rev = \"$anchor_rev\", default-features = false }" >> $project_toml
     # Commit and push changes, including uncommitted setup.fish
     cd $project_dir
     git add Cargo.toml setup.fish
