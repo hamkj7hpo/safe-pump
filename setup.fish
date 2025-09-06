@@ -88,19 +88,42 @@ else
     exit 1
 end
 
+# Patch zk-elgamal-proof/Cargo.toml
+set -l zk_sdk_toml $tmp_dir/zk-elgamal-proof/Cargo.toml
+if test -f $zk_sdk_toml
+    echo "Patching $zk_sdk_toml for solana-program and zeroize..."
+    sed -i '/solana-program/d' $zk_sdk_toml
+    sed -i '/zeroize/d' $zk_sdk_toml
+    sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $zk_sdk_toml
+    sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $zk_sdk_toml
+    cd $tmp_dir/zk-elgamal-proof
+    git add Cargo.toml
+    git commit -m "Update solana-zk-sdk to use solana-program from safe-pump-compat rev and zeroize 1.3.0" || true
+    git push origin $branch
+    if test $status -ne 0
+        echo "Failed to push changes to zk-elgamal-proof"
+        exit 1
+    end
+    set zk_rev (git rev-parse HEAD)
+    cd -
+else
+    echo "Error: $zk_sdk_toml not found"
+    exit 1
+end
+
 # Patch spl-pod/Cargo.toml
 set -l spl_pod_toml $tmp_dir/spl-pod/Cargo.toml
 if test -f $spl_pod_toml
-    echo "Patching $spl_pod_toml for solana-program..."
+    echo "Patching $spl_pod_toml for solana-program and solana-zk-sdk..."
     sed -i '/solana-program/d' $spl_pod_toml
     sed -i '/zeroize/d' $spl_pod_toml
     sed -i '/solana-zk-sdk/d' $spl_pod_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $spl_pod_toml
-    sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }' $spl_pod_toml
+    sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $spl_pod_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $spl_pod_toml
     cd $tmp_dir/spl-pod
     git add Cargo.toml
-    git commit -m "Update solana-program, solana-zk-sdk, and zeroize to safe-pump-compat branch" || true
+    git commit -m "Update solana-program, solana-zk-sdk, and zeroize to safe-pump-compat revs" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to spl-pod"
@@ -121,7 +144,7 @@ if test -f $anchor_spl_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $anchor_spl_toml
     cd $tmp_dir/anchor
     git add spl/Cargo.toml
-    git commit -m "Update anchor-spl to use solana-program from safe-pump-compat branch" || true
+    git commit -m "Update anchor-spl to use solana-program from safe-pump-compat rev" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to anchor"
@@ -131,29 +154,6 @@ if test -f $anchor_spl_toml
     cd -
 else
     echo "Error: $anchor_spl_toml not found"
-    exit 1
-end
-
-# Patch zk-elgamal-proof/Cargo.toml
-set -l zk_sdk_toml $tmp_dir/zk-elgamal-proof/Cargo.toml
-if test -f $zk_sdk_toml
-    echo "Patching $zk_sdk_toml for solana-program and zeroize..."
-    sed -i '/solana-program/d' $zk_sdk_toml
-    sed -i '/zeroize/d' $zk_sdk_toml
-    sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $zk_sdk_toml
-    sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $zk_sdk_toml
-    cd $tmp_dir/zk-elgamal-proof
-    git add Cargo.toml
-    git commit -m "Update solana-zk-sdk and zeroize to 1.3.0 for safe-pump-compat branch" || true
-    git push origin $branch
-    if test $status -ne 0
-        echo "Failed to push changes to zk-elgamal-proof"
-        exit 1
-    end
-    set zk_rev (git rev-parse HEAD)
-    cd -
-else
-    echo "Error: $zk_sdk_toml not found"
     exit 1
 end
 
@@ -203,7 +203,7 @@ else
     exit 1
 end
 
-# Patch solana-program-library/libraries/discriminator/Cargo.toml and handle uncommitted changes
+# Patch solana-program-library/libraries/discriminator/Cargo.toml
 set -l spl_discriminator_toml $tmp_dir/solana-program-library/libraries/discriminator/Cargo.toml
 if test -f $spl_discriminator_toml
     echo "Patching $spl_discriminator_toml for solana-program..."
@@ -211,8 +211,7 @@ if test -f $spl_discriminator_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $spl_discriminator_toml
     cd $tmp_dir/solana-program-library
     git add libraries/discriminator/Cargo.toml
-    git add program-error/Cargo.toml
-    git commit -m "Update spl-discriminator to use solana-program from safe-pump-compat rev and commit program-error changes" || true
+    git commit -m "Update spl-discriminator to use solana-program from safe-pump-compat rev" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to solana-program-library"
@@ -228,11 +227,11 @@ end
 # Patch spl-type-length-value/Cargo.toml
 set -l spl_tlv_toml $tmp_dir/spl-type-length-value/Cargo.toml
 if test -f $spl_tlv_toml
-    echo "Patching $spl_tlv_toml for solana-program..."
+    echo "Patching $spl_tlv_toml for solana-program and spl-pod..."
     sed -i '/solana-program/d' $spl_tlv_toml
     sed -i '/spl-pod/d' $spl_tlv_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $spl_tlv_toml
-    sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod" }' $spl_tlv_toml
+    sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod", default-features = false }' $spl_tlv_toml
     cd $tmp_dir/spl-type-length-value
     git add Cargo.toml
     git commit -m "Update spl-tlv-account-resolution to use solana-program and spl-pod from safe-pump-compat revs" || true
@@ -274,12 +273,14 @@ end
 # Patch token-metadata/Cargo.toml
 set -l token_metadata_toml $tmp_dir/token-metadata/Cargo.toml
 if test -f $token_metadata_toml
-    echo "Patching $token_metadata_toml for solana-program..."
+    echo "Patching $token_metadata_toml for solana-program and spl-pod..."
     sed -i '/solana-program/d' $token_metadata_toml
+    sed -i '/spl-pod/d' $token_metadata_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $token_metadata_toml
+    sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod", default-features = false }' $token_metadata_toml
     cd $tmp_dir/token-metadata
     git add Cargo.toml
-    git commit -m "Update solana-program to safe-pump-compat rev" || true
+    git commit -m "Update solana-program and spl-pod to safe-pump-compat revs" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to token-metadata"
@@ -334,40 +335,36 @@ else
     exit 1
 end
 
-# Patch raydium-cp-swap/Cargo.toml (fix syntax error)
+# Patch raydium-cp-swap/Cargo.toml
 set -l raydium_toml $tmp_dir/raydium-cp-swap/Cargo.toml
 if test -f $raydium_toml
-    echo "Patching $raydium_toml for solana-program and fixing syntax..."
-    sed -i '/\[profile.release\]/d' $raydium_toml
-    sed -i '/overflow-checks =/d' $raydium_toml
-    sed -i '/lto =/d' $raydium_toml
-    sed -i '/codegen-units =/d' $raydium_toml
-    sed -i '/\[profile.release.build-override\]/d' $raydium_toml
-    sed -i '/opt-level =/d' $raydium_toml
-    sed -i '/incremental =/d' $raydium_toml
-    sed -i '/codegen-units =/d' $raydium_toml
-    sed -i '/codegen-units = 1\[patch.crates-io\]/d' $raydium_toml
+    echo "Patching $raydium_toml for solana-program, solana-zk-sdk, and zeroize..."
     sed -i '/solana-program/d' $raydium_toml
+    sed -i '/solana-zk-sdk/d' $raydium_toml
     sed -i '/zeroize/d' $raydium_toml
+    sed -i '/spl-pod/d' $raydium_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $raydium_toml
+    sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $raydium_toml
+    sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod", default-features = false }' $raydium_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $raydium_toml
     echo -e "\n[profile.release]\noverflow-checks = true\nlto = \"fat\"\ncodegen-units = 1" >> $raydium_toml
     echo -e "\n[profile.release.build-override]\nopt-level = 3\nincremental = false\ncodegen-units = 1" >> $raydium_toml
     cd $tmp_dir/raydium-cp-swap
     git add Cargo.toml
-    git commit -m "Fix syntax in Cargo.toml and update solana-program to safe-pump-compat rev" || true
+    git commit -m "Update solana-program, solana-zk-sdk, spl-pod, and zeroize to safe-pump-compat revs" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to raydium-cp-swap"
         exit 1
     end
+    set raydium_rev (git rev-parse HEAD)
     cd -
 else
     echo "Error: $raydium_toml not found"
     exit 1
 end
 
-# Patch raydium-cp-swap/programs/cp-swap/Cargo.toml for solana-program, solana-zk-sdk, zeroize, and spl-token-2022
+# Patch raydium-cp-swap/programs/cp-swap/Cargo.toml
 set -l raydium_program_toml $tmp_dir/raydium-cp-swap/programs/cp-swap/Cargo.toml
 if test -f $raydium_program_toml
     echo "Patching $raydium_program_toml for solana-program, solana-zk-sdk, zeroize, and spl-token-2022..."
@@ -375,13 +372,15 @@ if test -f $raydium_program_toml
     sed -i '/solana-zk-sdk/d' $raydium_program_toml
     sed -i '/zeroize/d' $raydium_program_toml
     sed -i '/spl-token-2022/d' $raydium_program_toml
+    sed -i '/spl-pod/d' $raydium_program_toml
     sed -i '/\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", rev = "'$solana_rev'", package = "solana-program" }' $raydium_program_toml
     sed -i '/\[dependencies\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $raydium_program_toml
+    sed -i '/\[dependencies\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", package = "spl-pod", default-features = false }' $raydium_program_toml
     sed -i '/\[dependencies\]/a zeroize = "1.3.0"' $raydium_program_toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "'$token_rev'", package = "spl-token-2022", default-features = false }' $raydium_program_toml
     cd $tmp_dir/raydium-cp-swap
     git add programs/cp-swap/Cargo.toml
-    git commit -m "Update solana-program, solana-zk-sdk, zeroize, and spl-token-2022 to safe-pump-compat revs to resolve dependency conflict" || true
+    git commit -m "Update solana-program, solana-zk-sdk, spl-pod, zeroize, and spl-token-2022 to safe-pump-compat revs" || true
     git push origin $branch
     if test $status -ne 0
         echo "Failed to push changes to raydium-cp-swap"
@@ -394,7 +393,7 @@ else
     exit 1
 end
 
-# Step 3: Update safe_pump Cargo.toml and handle uncommitted changes
+# Step 3: Update safe_pump Cargo.toml
 set -l project_toml $project_dir/Cargo.toml
 if test -f $project_toml
     echo "Patching $project_toml for dependencies..."
@@ -415,7 +414,6 @@ if test -f $project_toml
     sed -i '/spl-discriminator =/d' $project_toml
     sed -i '/spl-tlv-account-resolution =/d' $project_toml
     sed -i '/zeroize =/d' $project_toml
-    sed -i '/solana-sdk =/d' $project_toml
     sed -i '/spki =/d' $project_toml
     sed -i '/curve25519-dalek =/d' $project_toml
     sed -i '/\[dependencies\]/a anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", features = ["init-if-needed"] }' $project_toml
@@ -447,11 +445,10 @@ if test -f $project_toml
     sed -i '/spl-type-length-value =.*}/d' $project_toml
     sed -i '/spki =.*}/d' $project_toml
     sed -i '/curve25519-dalek =.*}/d' $project_toml
-    sed -i '/solana-sdk =.*}/d' $project_toml
     sed -i '/\[patch.crates-io\]/a anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", rev = "'$anchor_rev'", default-features = false }' $project_toml
     sed -i '/\[patch.crates-io\]/a spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", rev = "'$pod_rev'", default-features = false }' $project_toml
     sed -i '/\[patch.crates-io\]/a solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", rev = "'$zk_rev'", package = "solana-zk-sdk" }' $project_toml
-    sed -i '/\[patch.crates-io\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "'$token_rev'", package = "spl-token-2022", default-features = false }' $project_toml
+    sed -i '/\[patch.crates-io\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", rev = "'$token_rev'", package = "solana-zk-sdk" }' $project_toml
     sed -i '/\[patch.crates-io\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", rev = "'$assoc_rev'", default-features = false }' $project_toml
     sed -i '/\[patch.crates-io\]/a spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", rev = "'$library_rev'", package = "spl-discriminator" }' $project_toml
     sed -i '/\[patch.crates-io\]/a spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", rev = "'$tlv_rev'", package = "spl-tlv-account-resolution" }' $project_toml
@@ -463,7 +460,7 @@ if test -f $project_toml
     # Commit and push changes, including uncommitted setup.fish
     cd $project_dir
     git add Cargo.toml setup.fish
-    git commit -m "Update dependencies to use safe-pump-compat revs for zeroize compatibility and commit setup.fish changes" || true
+    git commit -m "Update dependencies to use safe-pump-compat revs for zeroize 1.3.0 compatibility" || true
     git push origin main
     if test $status -ne 0
         echo "Failed to push changes to safe_pump"
@@ -489,6 +486,7 @@ else
     # Generate diagnostic report
     echo "Generating diagnostic report..."
     cargo tree --invert curve25519-dalek > /tmp/safe_pump_diagnostic_report.txt
+    cargo tree --invert zeroize >> /tmp/safe_pump_diagnostic_report.txt
     cargo tree >> /tmp/safe_pump_diagnostic_report.txt
     echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
     exit 1
