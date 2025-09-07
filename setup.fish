@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix anchor-spl optional dependency issue" || true
+    git commit -m "Update setup.fish to fix anchor-spl optional dependency issues for spl-token-2022" || true
     git push origin main || true
 end
 
@@ -245,7 +245,7 @@ if test -d /tmp/deps/anchor/spl
     cd /tmp/deps/anchor/spl
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i '/spl-token-2022 =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }' Cargo.toml
+    sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", optional = true }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account", optional = true }' Cargo.toml
     sed -i '/spl-token-group-interface =/d' Cargo.toml
@@ -257,7 +257,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix spl-associated-token-account optional dependency, remove patch.crates-io" || true
+    git commit -m "Fix optional dependencies for spl-token-2022 and spl-associated-token-account, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
