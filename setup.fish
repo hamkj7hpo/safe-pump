@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to avoid anchor-spl patch conflict" || true
+    git commit -m "Update setup.fish to avoid anchor-spl dependency conflict" || true
     git push origin main || true
 end
 
@@ -123,7 +123,7 @@ for repo in $hamkj_repos
                 git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
             end
         else
-            echo "Failed to clone $repo. Relying on patch.crates-io for $repo."
+            echo "Failed to clone $repo. Relying on existing configuration for $repo."
             continue
         end
     end
@@ -135,15 +135,9 @@ if test -d /tmp/deps/solana/sdk/program
     cd /tmp/deps/solana/sdk/program
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", default-features = false, features = ["std"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -169,15 +163,9 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
     sed -i 's|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
     sed -i 's|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -204,15 +192,9 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
     sed -i 's|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -222,15 +204,9 @@ if test -d /tmp/deps/spl-pod
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -248,13 +224,8 @@ if test -d /tmp/deps/anchor/spl
     sed -i '/\[dependencies\]/a spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface", optional = true }' Cargo.toml
     sed -i '/spl-memo =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0", optional = true }' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Remove duplicate entries, pin zeroize to 1.3.0, update dependencies" || true
     git push origin $branch || true
@@ -273,13 +244,7 @@ if test -d /tmp/deps/token-2022/program
     sed -i 's|spl-type-length-value =.*|spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-type-length-value" }|' Cargo.toml
     sed -i 's|spl-tlv-account-resolution =.*|spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Update dependencies to use forked repos" || true
     git push origin $branch || true
@@ -292,15 +257,9 @@ if test -d /tmp/deps/associated-token-account/program
     sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
     sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
     sed -i 's|spl-program-error =.*|spl-program-error = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-program-error" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies to use forked repos, remove zeroize patch" || true
+    git commit -m "Update dependencies to use forked repos, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -309,15 +268,9 @@ if test -d /tmp/deps/solana-program-library
     cd /tmp/deps/solana-program-library
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -325,15 +278,9 @@ if test -d /tmp/deps/solana-program-library/libraries/discriminator
     echo "Patching /tmp/deps/solana-program-library/libraries/discriminator/Cargo.toml..."
     cd /tmp/deps/solana-program-library/libraries/discriminator
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove zeroize patch, update dependencies" || true
+    git commit -m "Update dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -342,15 +289,9 @@ if test -d /tmp/deps/spl-type-length-value
     cd /tmp/deps/spl-type-length-value
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove zeroize patch, update dependencies" || true
+    git commit -m "Update dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -360,15 +301,9 @@ if test -d /tmp/deps/token-group
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove zeroize patch, update dependencies" || true
+    git commit -m "Update dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -377,15 +312,9 @@ if test -d /tmp/deps/token-metadata
     cd /tmp/deps/token-metadata
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove zeroize patch, update dependencies" || true
+    git commit -m "Update dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -393,15 +322,9 @@ if test -d /tmp/deps/transfer-hook
     echo "Patching /tmp/deps/transfer-hook/Cargo.toml..."
     cd /tmp/deps/transfer-hook
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove zeroize patch, update dependencies" || true
+    git commit -m "Update dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -409,15 +332,9 @@ if test -d /tmp/deps/memo
     echo "Patching /tmp/deps/memo/Cargo.toml..."
     cd /tmp/deps/memo
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove zeroize patch, update dependencies" || true
+    git commit -m "Update dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -427,15 +344,9 @@ if test -d /tmp/deps/raydium-cp-swap
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -451,15 +362,9 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     sed -i 's|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
     sed -i 's|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
     sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
-    if grep -q "\[patch.crates-io\]" Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
-        sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
-        if ! grep -q "[^[:space:]]" Cargo.toml -A 1000 | grep -q "\[patch.crates-io\].*[^[:space:]]"
-            sed -i '/\[patch.crates-io\]/d' Cargo.toml
-        end
-    end
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove zeroize patch" || true
+    git commit -m "Pin zeroize to 1.3.0 in dependencies, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -468,7 +373,7 @@ echo "Patching $project_dir/Cargo.toml..."
 cd $project_dir
 # Remove any existing [patch.crates-io] section to avoid conflicts
 sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-# Update dependencies section to pin zeroize and use HTTPS
+# Update dependencies section to ensure correct versions and sources
 sed -i '/\[dependencies\]/,/^\[/ s|base64ct =.*|base64ct = { git = "https://github.com/RustCrypto/utils.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bincode =.*|bincode = "1.3.3"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
@@ -510,13 +415,14 @@ sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "http
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Update dependencies and remove patch.crates-io to avoid anchor-spl conflict" || true
+git commit -m "Update dependencies, remove patch.crates-io to avoid anchor-spl conflict" || true
 git push origin main || true
 
 # Clean and build the project
 echo "Cleaning and building project..."
 cd $project_dir
 cargo clean
+rm -f Cargo.lock
 git config --global credential.helper 'cache --timeout=3600'
 if cargo build
     echo "Build successful!"
