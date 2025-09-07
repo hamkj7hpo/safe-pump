@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to use HTTPS URLs in Cargo.toml and fix solana-derivation-path" || true
+    git commit -m "Update setup.fish to remove invalid solana-instruction patch and push curve25519-dalek commits" || true
     git push origin main || true
 end
 
@@ -86,8 +86,9 @@ for repo in $hamkj_repos
             if not git merge-base --is-ancestor $current_commit $target_branch
                 echo "Merging previous commit $current_commit into $target_branch..."
                 git merge --no-ff $current_commit -m "Merge previous commit into $target_branch" || true
-                git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
             end
+            # Push any local commits (e.g., for curve25519-dalek)
+            git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
         else
             echo "Branch $target_branch does not exist, creating..."
             git checkout -b $target_branch
@@ -181,9 +182,6 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|bytemuck_derive =.*|bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
     sed -i 's|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
     sed -i 's|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
-    sed -i 's|solana-instruction =.*|solana-instruction = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", features = ["std"] }|' Cargo.toml
-    sed -i 's|solana-pubkey =.*|solana-pubkey = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat", features = ["bytemuck"] }|' Cargo.toml
-    sed -i 's|solana-sdk-ids =.*|solana-sdk-ids = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
     sed -i 's|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
     sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
@@ -195,8 +193,6 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|serde_derive =.*|serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
     sed -i 's|serde_json =.*|serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }|' Cargo.toml
     sed -i 's|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
-    sed -i 's|solana-keypair =.*|solana-keypair = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
     sed -i 's|subtle =.*|subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
@@ -354,10 +350,8 @@ if ! grep -q "\[patch.crates-io\]" Cargo.toml
     echo 'anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }' >> Cargo.toml
     echo 'anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }' >> Cargo.toml
     echo 'raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'solana-instruction = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'solana-pubkey = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'solana-sdk-ids = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'solana-keypair = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' >> Cargo.toml
+    echo 'spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }' >> Cargo.toml
+    echo 'arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }' >> Cargo.toml
     echo 'base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }' >> Cargo.toml
     echo 'bincode = "1.3.3"' >> Cargo.toml
     echo 'bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }' >> Cargo.toml
@@ -366,6 +360,7 @@ if ! grep -q "\[patch.crates-io\]" Cargo.toml
     echo 'itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }' >> Cargo.toml
     echo 'lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }' >> Cargo.toml
     echo 'light-poseidon = "0.3.0"' >> Cargo.toml
+    echo 'merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }' >> Cargo.toml
     echo 'num = { git = "https://github.com/rust-num/num.git", branch = "master" }' >> Cargo.toml
     echo 'num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }' >> Cargo.toml
     echo 'num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }' >> Cargo.toml
@@ -376,13 +371,10 @@ if ! grep -q "\[patch.crates-io\]" Cargo.toml
     echo 'subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }' >> Cargo.toml
     echo 'thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }' >> Cargo.toml
     echo 'tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }' >> Cargo.toml
-    echo 'js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }' >> Cargo.toml
-    echo 'wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "master" }' >> Cargo.toml
-    echo 'aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }' >> Cargo.toml
-    echo 'spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }' >> Cargo.toml
     echo 'uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }' >> Cargo.toml
-    echo 'merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }' >> Cargo.toml
+    echo 'wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "master" }' >> Cargo.toml
+    echo 'js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }' >> Cargo.toml
+    echo 'aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }' >> Cargo.toml
 else
     sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }|' Cargo.toml
@@ -399,10 +391,8 @@ else
     sed -i '/\[patch.crates-io\]/,/^\[/ s|anchor-lang =.*|anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-instruction =.*|solana-instruction = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-pubkey =.*|solana-pubkey = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-sdk-ids =.*|solana-sdk-ids = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-keypair =.*|solana-keypair = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-math =.*|spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|arrayref =.*|arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|base64 =.*|base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|bincode =.*|bincode = "1.3.3"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
@@ -411,6 +401,7 @@ else
     sed -i '/\[patch.crates-io\]/,/^\[/ s|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
@@ -421,19 +412,15 @@ else
     sed -i '/\[patch.crates-io\]/,/^\[/ s|subtle =.*|subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-math =.*|spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|arrayref =.*|arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
-    # Remove potentially invalid patches
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-derivation-path =.*||' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-seed-derivable =.*||' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-seed-phrase =.*||' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-signature =.*||' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-signer =.*||' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "master" }|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
+    # Remove invalid patches
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-instruction =.*||' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-pubkey =.*||' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-sdk-ids =.*||' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-keypair =.*||' Cargo.toml
 end
 
 # Update dependencies section to pin zeroize and use HTTPS
@@ -460,7 +447,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { git = "https://
 sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
+git commit -m "Pin zeroize to 1.3.0, use HTTPS URLs, remove invalid patches" || true
 git push origin main || true
 
 # Clean and build the project
@@ -474,7 +461,7 @@ if cargo build
 else
     echo "Build failed, check output for errors."
     echo "Generating diagnostic report..."
-    cargo build --verbose > /tmp/safe_pump_diagnostic_report.txt 2>&1
-    echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
+    cargo build --verbose > /tmp/save_pump_diagnostic_report.txt 2>&1
+    echo "Diagnostic report saved to /tmp/save_pump_diagnostic_report.txt"
     exit 1
 end
