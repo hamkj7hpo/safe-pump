@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix truncation and remove light-poseidon patch" || true
+    git commit -m "Update setup.fish to enforce zeroize 1.3.0 across all dependencies" || true
     git push origin main || true
 end
 
@@ -142,6 +142,12 @@ if test -d /tmp/deps/solana/sdk/program
     cd /tmp/deps/solana/sdk/program
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", default-features = false, features = ["std"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -169,6 +175,12 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
     sed -i 's|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
     sed -i 's|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -197,6 +209,12 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
     sed -i 's|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -208,6 +226,12 @@ if test -d /tmp/deps/spl-pod
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -217,8 +241,14 @@ if test -d /tmp/deps/anchor/spl
     echo "Patching /tmp/deps/anchor/spl/Cargo.toml..."
     cd /tmp/deps/anchor/spl
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -228,6 +258,12 @@ if test -d /tmp/deps/token-2022
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -240,8 +276,30 @@ if test -d /tmp/deps/associated-token-account
     sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-program-error =.*|spl-program-error = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
+    git push origin $branch || true
+end
+
+if test -d /tmp/deps/solana-program-library
+    echo "Patching /tmp/deps/solana-program-library/Cargo.toml..."
+    cd /tmp/deps/solana-program-library
+    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
+    git add Cargo.toml
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -249,8 +307,14 @@ if test -d /tmp/deps/solana-program-library/libraries/discriminator
     echo "Patching /tmp/deps/solana-program-library/libraries/discriminator/Cargo.toml..."
     cd /tmp/deps/solana-program-library/libraries/discriminator
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -259,8 +323,14 @@ if test -d /tmp/deps/spl-type-length-value
     cd /tmp/deps/spl-type-length-value
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -269,8 +339,14 @@ if test -d /tmp/deps/token-group
     cd /tmp/deps/token-group
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -279,8 +355,14 @@ if test -d /tmp/deps/token-metadata
     cd /tmp/deps/token-metadata
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -288,8 +370,14 @@ if test -d /tmp/deps/transfer-hook
     echo "Patching /tmp/deps/transfer-hook/Cargo.toml..."
     cd /tmp/deps/transfer-hook
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -297,8 +385,14 @@ if test -d /tmp/deps/memo
     echo "Patching /tmp/deps/memo/Cargo.toml..."
     cd /tmp/deps/memo
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
-    git commit -m "Use HTTPS URLs" || true
+    git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
 end
 
@@ -308,6 +402,12 @@ if test -d /tmp/deps/raydium-cp-swap
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -325,6 +425,12 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     sed -i 's|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
     sed -i 's|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
     sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
+    if ! grep -q "\[patch.crates-io\]" Cargo.toml
+        echo -e "\n[patch.crates-io]" >> Cargo.toml
+        echo 'zeroize = "1.3.0"' >> Cargo.toml
+    else
+        sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    end
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0 and use HTTPS URLs" || true
     git push origin $branch || true
@@ -441,7 +547,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git =
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
 git add Cargo.toml
-git commit -m "Pin zeroize to 1.3.0, use HTTPS URLs, remove light-poseidon patch" || true
+git commit -m "Pin zeroize to 1.3.0, use HTTPS URLs" || true
 git push origin main || true
 
 # Clean and build the project
@@ -452,10 +558,25 @@ cargo clean
 git config --global credential.helper 'cache --timeout=3600'
 if cargo build
     echo "Build successful!"
+    # Generate dependency tree for verification
+    if command -v cargo-tree >/dev/null
+        echo "Generating dependency tree..."
+        cargo tree > /tmp/safe_pump_dependency_tree.txt
+        echo "Dependency tree saved to /tmp/safe_pump_dependency_tree.txt"
+    else
+        echo "cargo-tree not installed. Install with 'cargo install cargo-tree' to generate dependency tree."
+    end
 else
     echo "Build failed, check output for errors."
     echo "Generating diagnostic report..."
     cargo build --verbose > /tmp/safe_pump_diagnostic_report.txt 2>&1
     echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
+    if command -v cargo-tree >/dev/null
+        echo "Generating dependency tree for debugging..."
+        cargo tree > /tmp/safe_pump_dependency_tree.txt
+        echo "Dependency tree saved to /tmp/safe_pump_dependency_tree.txt"
+    else
+        echo "cargo-tree not installed. Install with 'cargo install cargo-tree' to generate dependency tree."
+    end
     exit 1
 end
