@@ -50,7 +50,7 @@ spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.gi
 
 # Anchor
 anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-spl", default-features = false }
+anchor-spl = { path = "/tmp/deps/anchor/spl", default-features = false }
 
 # Raydium
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }

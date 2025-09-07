@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to avoid anchor-spl dependency conflict" || true
+    git commit -m "Update setup.fish to use local path for anchor-spl" || true
     git push origin main || true
 end
 
@@ -101,6 +101,21 @@ for repo in $hamkj_repos
             git submodule sync
             git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
         end
+        # Verify anchor-spl package for anchor repository
+        if test "$repo" = "anchor"
+            if test -f spl/Cargo.toml
+                echo "Verifying anchor-spl package in $repo_dir/spl/Cargo.toml..."
+                if grep -q 'name = "anchor-spl"' spl/Cargo.toml
+                    echo "anchor-spl package found in $repo_dir/spl/Cargo.toml."
+                else
+                    echo "Error: anchor-spl package not found in $repo_dir/spl/Cargo.toml."
+                    exit 1
+                end
+            else
+                echo "Error: spl/Cargo.toml not found in $repo_dir."
+                exit 1
+            end
+        end
     else
         echo "Cloning $repo into $repo_dir using SSH..."
         if git clone $repo_url $repo_dir
@@ -121,6 +136,21 @@ for repo in $hamkj_repos
                 end
                 git submodule sync
                 git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
+            end
+            # Verify anchor-spl package for anchor repository
+            if test "$repo" = "anchor"
+                if test -f spl/Cargo.toml
+                    echo "Verifying anchor-spl package in $repo_dir/spl/Cargo.toml..."
+                    if grep -q 'name = "anchor-spl"' spl/Cargo.toml
+                        echo "anchor-spl package found in $repo_dir/spl/Cargo.toml."
+                    else
+                        echo "Error: anchor-spl package not found in $repo_dir/spl/Cargo.toml."
+                        exit 1
+                    end
+                else
+                    echo "Error: spl/Cargo.toml not found in $repo_dir."
+                    exit 1
+                end
             end
         else
             echo "Failed to clone $repo. Relying on existing configuration for $repo."
@@ -394,7 +424,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|spl-transfer-hook-interface =.*|spl-transfer-
 sed -i '/\[dependencies\]/,/^\[/ s|spl-token-metadata-interface =.*|spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|spl-token-group-interface =.*|spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|anchor-lang =.*|anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang", features = ["init-if-needed"] }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-spl", default-features = false }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { path = "/tmp/deps/anchor/spl", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
@@ -415,7 +445,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "http
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Update dependencies, remove patch.crates-io to avoid anchor-spl conflict" || true
+git commit -m "Update dependencies, use local path for anchor-spl to avoid dependency conflict" || true
 git push origin main || true
 
 # Clean and build the project
@@ -423,6 +453,8 @@ echo "Cleaning and building project..."
 cd $project_dir
 cargo clean
 rm -f Cargo.lock
+# Clear Cargo cache to avoid stale dependencies
+cargo cache clean
 git config --global credential.helper 'cache --timeout=3600'
 if cargo build
     echo "Build successful!"
