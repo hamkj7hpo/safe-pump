@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to use local path for anchor-spl" || true
+    git commit -m "Update setup.fish to fix anchor-spl optional dependency issue" || true
     git push origin main || true
 end
 
@@ -247,7 +247,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i '/spl-token-2022 =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }' Cargo.toml
+    sed -i '/\[dependencies\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account", optional = true }' Cargo.toml
     sed -i '/spl-token-group-interface =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface", optional = true }' Cargo.toml
     sed -i '/spl-transfer-hook-interface =/d' Cargo.toml
@@ -257,7 +257,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Remove duplicate entries, pin zeroize to 1.3.0, update dependencies" || true
+    git commit -m "Fix spl-associated-token-account optional dependency, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -453,8 +453,8 @@ echo "Cleaning and building project..."
 cd $project_dir
 cargo clean
 rm -f Cargo.lock
-# Clear Cargo cache to avoid stale dependencies
-cargo cache clean
+# Manually clear Cargo cache to avoid stale dependencies
+rm -rf ~/.cargo/registry/cache ~/.cargo/git
 git config --global credential.helper 'cache --timeout=3600'
 if cargo build
     echo "Build successful!"
