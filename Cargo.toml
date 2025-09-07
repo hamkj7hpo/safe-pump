@@ -16,29 +16,29 @@ zeroize = "1.3.0"
 rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }
 sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
-curve25519-dalek = { git = "git@github.com:hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["serde"] }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["serde"] }
 
 # Solana fork & SPL dependencies
-solana-program = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-spl-pod = { git = "git@github.com:hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
-spl-associated-token-account = { git = "git@github.com:hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat" }
-spl-tlv-account-resolution = { git = "git@github.com:hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
-spl-discriminator = { git = "git@github.com:hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }
-spl-token-2022 = { git = "git@github.com:hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
-spl-memo = { git = "git@github.com:hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
-spl-transfer-hook-interface = { git = "git@github.com:hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }
-spl-token-metadata-interface = { git = "git@github.com:hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }
-spl-token-group-interface = { git = "git@github.com:hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat" }
+spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
+spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
+spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }
+spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }
+spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
 
 # Anchor
-anchor-lang = { git = "git@github.com:hamkj7hpo/anchor.git", branch = "safe-pump-compat", features = ["init-if-needed"] }
-anchor-spl = { git = "git@github.com:hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", features = ["init-if-needed"] }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }
 
 # Raydium
-raydium-cp-swap = { git = "git@github.com:hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }
+raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }
 
 # zk-SDK
-solana-zk-sdk = { git = "git@github.com:hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }
 
 [features]
 cpi = []
@@ -48,29 +48,29 @@ overflow-checks = true
 
 [patch.crates-io]
 zeroize = "1.3.0"
-curve25519-dalek = { git = "git@github.com:hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }
-solana-program = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-spl-pod = { git = "git@github.com:hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
-solana-zk-sdk = { git = "git@github.com:hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }
-spl-associated-token-account = { git = "git@github.com:hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat" }
-spl-type-length-value = { git = "git@github.com:hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
-spl-memo = { git = "git@github.com:hamkj7hpo/memo.git", branch = "safe-pump-compat", version = "6.0.0" }
-spl-token-2022 = { git = "git@github.com:hamkj7hpo/token-2022.git", branch = "safe-pump-compat" }
-spl-transfer-hook-interface = { git = "git@github.com:hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat" }
-spl-token-metadata-interface = { git = "git@github.com:hamkj7hpo/token-metadata.git", branch = "safe-pump-compat" }
-spl-token-group-interface = { git = "git@github.com:hamkj7hpo/token-group.git", branch = "safe-pump-compat" }
-anchor-lang = { git = "git@github.com:hamkj7hpo/anchor.git", branch = "safe-pump-compat" }
-anchor-spl = { git = "git@github.com:hamkj7hpo/anchor.git", branch = "safe-pump-compat" }
-raydium-cp-swap = { git = "git@github.com:hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat" }
-solana-instruction = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-pubkey = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-sdk-ids = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-derivation-path = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-seed-derivable = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-seed-phrase = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-signature = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-signer = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
-solana-keypair = { git = "git@github.com:hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }
+solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }
+spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat" }
+spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
+spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", version = "6.0.0" }
+spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat" }
+spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat" }
+spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat" }
+spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat" }
+anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }
+anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }
+raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat" }
+solana-instruction = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-pubkey = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-sdk-ids = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-derivation-path = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-seed-derivable = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-seed-phrase = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-signature = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-signer = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+solana-keypair = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }
 bincode = "1.3.3"
 bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }
@@ -93,7 +93,7 @@ tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "
 js-sys = { git = "https://github.com/rustwasm/js-sys.git", branch = "master" }
 wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "master" }
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }
-spl-math = { git = "git@github.com:hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }
+spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat" }
 arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }
 uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
