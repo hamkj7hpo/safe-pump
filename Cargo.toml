@@ -17,6 +17,7 @@ rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }
 sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
 curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["serde"] }
+light-poseidon = "0.3.0"
 
 # Solana fork & SPL dependencies
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
@@ -71,7 +72,6 @@ bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "
 getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }
 itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }
 lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }
-light-poseidon = "0.3.0"
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
 num = { git = "https://github.com/rust-num/num.git", branch = "master" }
 num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }
