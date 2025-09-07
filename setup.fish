@@ -39,12 +39,18 @@ if not ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"
     exit 1
 end
 
-# Commit any changes to setup.fish
+# Remove untracked files
 cd $project_dir
+if git status --porcelain | grep -q "setup.fish.save"
+    echo "Removing untracked setup.fish.save files..."
+    rm -f setup.fish.save*
+end
+
+# Commit any changes to setup.fish
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix anchor-spl optional dependency issues for spl-token-2022" || true
+    git commit -m "Update setup.fish to fix base64ct dependency and anchor-spl optional dependencies" || true
     git push origin main || true
 end
 
@@ -404,7 +410,7 @@ cd $project_dir
 # Remove any existing [patch.crates-io] section to avoid conflicts
 sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
 # Update dependencies section to ensure correct versions and sources
-sed -i '/\[dependencies\]/,/^\[/ s|base64ct =.*|base64ct = { git = "https://github.com/RustCrypto/utils.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|base64ct =.*|base64ct = { git = "https://github.com/RustCrypto/utils", package = "base64ct", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bincode =.*|bincode = "1.3.3"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bytemuck_derive =.*|bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
@@ -445,7 +451,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "http
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Update dependencies, use local path for anchor-spl to avoid dependency conflict" || true
+git commit -m "Update dependencies, fix base64ct and use local path for anchor-spl" || true
 git push origin main || true
 
 # Clean and build the project
