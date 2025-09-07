@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix wasm-bindgen branch and spl-pod features" || true
+    git commit -m "Update setup.fish to fix truncation and remove light-poseidon patch" || true
     git push origin main || true
 end
 
@@ -359,7 +359,6 @@ if ! grep -q "\[patch.crates-io\]" Cargo.toml
     echo 'getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }' >> Cargo.toml
     echo 'itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }' >> Cargo.toml
     echo 'lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }' >> Cargo.toml
-    echo 'light-poseidon = "0.3.0"' >> Cargo.toml
     echo 'merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }' >> Cargo.toml
     echo 'num = { git = "https://github.com/rust-num/num.git", branch = "master" }' >> Cargo.toml
     echo 'num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }' >> Cargo.toml
@@ -400,7 +399,6 @@ else
     sed -i '/\[patch.crates-io\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/ s|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
@@ -441,8 +439,9 @@ sed -i '/\[dependencies\]/,/^\[/ s|anchor-lang =.*|anchor-lang = { git = "https:
 sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
 git add Cargo.toml
-git commit -m "Pin zeroize to 1.3.0, use HTTPS URLs, fix wasm-bindgen branch and spl-pod features" || true
+git commit -m "Pin zeroize to 1.3.0, use HTTPS URLs, remove light-poseidon patch" || true
 git push origin main || true
 
 # Clean and build the project
