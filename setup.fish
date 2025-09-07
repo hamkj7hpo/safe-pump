@@ -220,7 +220,7 @@ if test -d /tmp/deps/spl-pod
     echo "Patching /tmp/deps/spl-pod/Cargo.toml..."
     cd /tmp/deps/spl-pod
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     if grep -q "\[patch.crates-io\]" Cargo.toml
         sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
@@ -242,6 +242,12 @@ if test -d /tmp/deps/anchor/spl
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }' Cargo.toml
+    sed -i '/spl-token-group-interface =/d' Cargo.toml
+    sed -i '/\[dependencies\]/a spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface", optional = true }' Cargo.toml
+    sed -i '/spl-transfer-hook-interface =/d' Cargo.toml
+    sed -i '/\[dependencies\]/a spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface", optional = true }' Cargo.toml
+    sed -i '/spl-memo =/d' Cargo.toml
+    sed -i '/\[dependencies\]/a spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0", optional = true }' Cargo.toml
     if grep -q "\[patch.crates-io\]" Cargo.toml
         sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
         sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
@@ -250,7 +256,7 @@ if test -d /tmp/deps/anchor/spl
         end
     end
     git add Cargo.toml
-    git commit -m "Remove duplicate spl-token-2022 and spl-associated-token-account, remove zeroize patch, update dependencies" || true
+    git commit -m "Remove duplicate entries, pin zeroize to 1.3.0, update dependencies" || true
     git push origin $branch || true
 end
 
@@ -353,6 +359,7 @@ if test -d /tmp/deps/token-group
     cd /tmp/deps/token-group
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
     if grep -q "\[patch.crates-io\]" Cargo.toml
         sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
         sed -i '/\[patch.crates-io\]/,/^\[/ {/^$/d}' Cargo.toml
@@ -418,7 +425,7 @@ if test -d /tmp/deps/raydium-cp-swap
     echo "Patching /tmp/deps/raydium-cp-swap/Cargo.toml..."
     cd /tmp/deps/raydium-cp-swap
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     if grep -q "\[patch.crates-io\]" Cargo.toml
         sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*||' Cargo.toml
@@ -436,7 +443,7 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     echo "Patching /tmp/deps/raydium-cp-swap/programs/cp-swap/Cargo.toml..."
     cd /tmp/deps/raydium-cp-swap/programs/cp-swap
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|spl-token-2022 =.*|spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }|' Cargo.toml
     sed -i 's|spl-math =.*|spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-math" }|' Cargo.toml
