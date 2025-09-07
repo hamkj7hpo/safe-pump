@@ -31,7 +31,8 @@ if not git config user.name >/dev/null || not git config user.email >/dev/null
     exit 1
 end
 
-# Verify SSH key is set up
+# Verify global SSH access to GitHub
+echo "Verifying global SSH access to GitHub..."
 if not ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"
     echo "SSH key not set up correctly for GitHub. Please ensure your SSH key is added to your GitHub account."
     echo "See: https://docs.github.com/en/authentication/connecting-to-github-with-ssh"
@@ -43,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to use HTTPS URLs for hamkj7hpo in Cargo.toml and SSH for repo operations" || true
+    git commit -m "Update setup.fish to check SSH access per repo and use HTTPS for non-hamkj7hpo" || true
     git push origin main || true
 end
 
@@ -57,6 +58,12 @@ for repo in $hamkj_repos
     set -l target_branch (test "$repo" = "curve25519-dalek" && echo "safe-pump-compat-v2" || echo $branch)
 
     echo "Processing $repo into $repo_dir..."
+    # Verify SSH access for this specific repository
+    echo "Verifying SSH access for $repo..."
+    if not ssh -T git@github.com -o StrictHostKeyChecking=no 2>&1 | grep -q "hamkj7hpo/$repo"
+        echo "Warning: SSH access to $repo may not be configured correctly. Attempting to proceed..."
+    end
+
     if test -d $repo_dir
         echo "$repo_dir already exists, updating..."
         cd $repo_dir
@@ -87,6 +94,18 @@ for repo in $hamkj_repos
             git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
         end
         git pull origin $target_branch || true
+        # Update submodules to use SSH for hamkj7hpo repos, HTTPS for others
+        if git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' >/dev/null
+            echo "Updating submodules to use SSH for hamkj7hpo repositories..."
+            git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' | while read -l line
+                set -l submodule_url (echo $line | awk '{print $2}')
+                set -l submodule_name (echo $line | awk '{print $1}' | sed 's/submodule\.//; s/\.url//')
+                set -l ssh_url (echo $submodule_url | sed 's|https://github.com/|git@github.com:|')
+                git config -f .gitmodules --replace-all "submodule.$submodule_name.url" $ssh_url
+            end
+            git submodule sync
+            git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
+        end
     else
         echo "Cloning $repo into $repo_dir using SSH..."
         if git clone $repo_url $repo_dir
@@ -96,6 +115,18 @@ for repo in $hamkj_repos
             else
                 git checkout -b $target_branch
                 git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
+            end
+            # Configure submodules for new clones
+            if git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' >/dev/null
+                echo "Configuring submodules to use SSH for hamkj7hpo repositories..."
+                git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' | while read -l line
+                    set -l submodule_url (echo $line | awk '{print $2}')
+                    set -l submodule_name (echo $line | awk '{print $1}' | sed 's/submodule\.//; s/\.url//')
+                    set -l ssh_url (echo $submodule_url | sed 's|https://github.com/|git@github.com:|')
+                    git config -f .gitmodules --replace-all "submodule.$submodule_name.url" $ssh_url
+                end
+                git submodule sync
+                git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
             end
         else
             echo "Failed to clone $repo. Relying on patch.crates-io for $repo."
@@ -447,6 +478,8 @@ git push origin main || true
 echo "Cleaning and building project..."
 cd $project_dir
 cargo clean
+# Set up git credential helper to avoid HTTPS prompts for non-hamkj7hpo repos
+git config --global credential.helper 'cache --timeout=3600'
 if cargo build
     echo "Build successful!"
 else
