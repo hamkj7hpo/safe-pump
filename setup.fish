@@ -44,7 +44,7 @@ cd $project_dir
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to centralize zeroize 1.3.0 patch" || true
+    git commit -m "Update setup.fish to avoid anchor-spl patch conflict" || true
     git push origin main || true
 end
 
@@ -466,93 +466,13 @@ end
 # Patch the main project's Cargo.toml
 echo "Patching $project_dir/Cargo.toml..."
 cd $project_dir
-if ! grep -q "\[patch.crates-io\]" Cargo.toml
-    echo -e "\n[patch.crates-io]" >> Cargo.toml
-    echo 'zeroize = { version = "=1.3.0" }' >> Cargo.toml
-    echo 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }' >> Cargo.toml
-    echo 'solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }' >> Cargo.toml
-    echo 'solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }' >> Cargo.toml
-    echo 'spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }' >> Cargo.toml
-    echo 'spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-type-length-value" }' >> Cargo.toml
-    echo 'spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }' >> Cargo.toml
-    echo 'spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }' >> Cargo.toml
-    echo 'spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }' >> Cargo.toml
-    echo 'spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }' >> Cargo.toml
-    echo 'spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }' >> Cargo.toml
-    echo 'anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang" }' >> Cargo.toml
-    echo 'anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-spl" }' >> Cargo.toml
-    echo 'raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap" }' >> Cargo.toml
-    echo 'spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-math" }' >> Cargo.toml
-    echo 'arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }' >> Cargo.toml
-    echo 'base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }' >> Cargo.toml
-    echo 'bincode = "1.3.3"' >> Cargo.toml
-    echo 'bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }' >> Cargo.toml
-    echo 'bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }' >> Cargo.toml
-    echo 'getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }' >> Cargo.toml
-    echo 'itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }' >> Cargo.toml
-    echo 'lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }' >> Cargo.toml
-    echo 'merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }' >> Cargo.toml
-    echo 'num = { git = "https://github.com/rust-num/num.git", branch = "master" }' >> Cargo.toml
-    echo 'num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }' >> Cargo.toml
-    echo 'num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }' >> Cargo.toml
-    echo 'serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }' >> Cargo.toml
-    echo 'serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }' >> Cargo.toml
-    echo 'serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }' >> Cargo.toml
-    echo 'sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }' >> Cargo.toml
-    echo 'subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }' >> Cargo.toml
-    echo 'thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }' >> Cargo.toml
-    echo 'tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }' >> Cargo.toml
-    echo 'uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }' >> Cargo.toml
-    echo 'wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }' >> Cargo.toml
-    echo 'js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }' >> Cargo.toml
-    echo 'aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }' >> Cargo.toml
-else
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|zeroize =.*|zeroize = { version = "=1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-associated-token-account =.*|spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-type-length-value =.*|spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-type-length-value" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-memo =.*|spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-token-2022 =.*|spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-transfer-hook-interface =.*|spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-token-metadata-interface =.*|spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-token-group-interface =.*|spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|anchor-lang =.*|anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-spl" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|spl-math =.*|spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-math" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|arrayref =.*|arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|base64 =.*|base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|bincode =.*|bincode = "1.3.3"|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|bytemuck_derive =.*|bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|serde =.*|serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|serde_derive =.*|serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|serde_json =.*|serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|subtle =.*|subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
-end
-
+# Remove any existing [patch.crates-io] section to avoid conflicts
+sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
 # Update dependencies section to pin zeroize and use HTTPS
 sed -i '/\[dependencies\]/,/^\[/ s|base64ct =.*|base64ct = { git = "https://github.com/RustCrypto/utils.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bincode =.*|bincode = "1.3.3"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|bytemuck_derive =.*|bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|rand =.*|rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
@@ -573,8 +493,24 @@ sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { git = "https://
 sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|serde =.*|serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|serde_derive =.*|serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|serde_json =.*|serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|subtle =.*|subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Centralize zeroize 1.3.0 patch, update dependencies" || true
+git commit -m "Update dependencies and remove patch.crates-io to avoid anchor-spl conflict" || true
 git push origin main || true
 
 # Clean and build the project
