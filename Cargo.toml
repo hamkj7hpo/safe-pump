@@ -17,7 +17,7 @@ zeroize = "1.3.0"
 rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }
 sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", version = "4.1.3", features = ["std", "serde"] }
 light-poseidon = "0.3.0"
 getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }
 itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }
@@ -63,3 +63,6 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
+
+[patch.crates-io]
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", version = "4.1.3" }
