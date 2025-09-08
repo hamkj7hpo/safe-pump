@@ -50,7 +50,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to use crates.io for curve25519-dalek and base64ct" || true
+    git commit -m "Update setup.fish to fix curve25519-dalek feature conflict and handle submodules" || true
     git push origin main || true
 end
 
@@ -96,9 +96,9 @@ for repo in $hamkj_repos
             git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
         end
         git pull origin $target_branch || true
-        if git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' >/dev/null
-            echo "Updating submodules to use SSH for hamkj7hpo repositories..."
-            git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' | while read -l line
+        if git config -f .gitmodules --get-regexp 'url.*' >/dev/null
+            echo "Updating submodules to use SSH..."
+            git config -f .gitmodules --get-regexp 'url.*' | while read -l line
                 set -l submodule_url (echo $line | awk '{print $2}')
                 set -l submodule_name (echo $line | awk '{print $1}' | sed 's/submodule\.//; s/\.url//')
                 set -l ssh_url (echo $submodule_url | sed 's|https://github.com/|git@github.com:|')
@@ -132,9 +132,9 @@ for repo in $hamkj_repos
                 git checkout -b $target_branch
                 git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
             end
-            if git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' >/dev/null
-                echo "Configuring submodules to use SSH for hamkj7hpo repositories..."
-                git config -f .gitmodules --get-regexp 'url.*hamkj7hpo' | while read -l line
+            if git config -f .gitmodules --get-regexp 'url.*' >/dev/null
+                echo "Configuring submodules to use SSH..."
+                git config -f .gitmodules --get-regexp 'url.*' | while read -l line
                     set -l submodule_url (echo $line | awk '{print $2}')
                     set -l submodule_name (echo $line | awk '{print $1}' | sed 's/submodule\.//; s/\.url//')
                     set -l ssh_url (echo $submodule_url | sed 's|https://github.com/|git@github.com:|')
@@ -165,7 +165,7 @@ for repo in $hamkj_repos
     end
 end
 
-# Patch dependency Cargo.toml files, removing zeroize patches and pinning dependencies
+# Patch dependency Cargo.toml files
 if test -d /tmp/deps/solana/sdk/program
     echo "Patching /tmp/deps/solana/sdk/program/Cargo.toml..."
     cd /tmp/deps/solana/sdk/program
@@ -250,6 +250,7 @@ if test -d /tmp/deps/anchor/spl
     echo "Patching /tmp/deps/anchor/spl/Cargo.toml..."
     cd /tmp/deps/anchor/spl
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|serum-dex =.*|serum-dex = { version = "0.5.6", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
     sed -i '/spl-token-2022 =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", optional = true }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
@@ -263,7 +264,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix optional dependencies for spl-token-2022 and spl-associated-token-account, remove patch.crates-io" || true
+    git commit -m "Fix optional dependencies and pin serum-dex to 0.5.6, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -280,9 +281,10 @@ if test -d /tmp/deps/token-2022/program
     sed -i 's|spl-type-length-value =.*|spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-type-length-value" }|' Cargo.toml
     sed -i 's|spl-tlv-account-resolution =.*|spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies to use forked repos" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -293,9 +295,10 @@ if test -d /tmp/deps/associated-token-account/program
     sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
     sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
     sed -i 's|spl-program-error =.*|spl-program-error = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-program-error" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies to use forked repos, remove patch.crates-io" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -325,9 +328,10 @@ if test -d /tmp/deps/spl-type-length-value
     cd /tmp/deps/spl-type-length-value
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies, remove patch.crates-io" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -337,9 +341,10 @@ if test -d /tmp/deps/token-group
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies, remove patch.crates-io" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -348,9 +353,10 @@ if test -d /tmp/deps/token-metadata
     cd /tmp/deps/token-metadata
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies, remove patch.crates-io" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -358,9 +364,10 @@ if test -d /tmp/deps/transfer-hook
     echo "Patching /tmp/deps/transfer-hook/Cargo.toml..."
     cd /tmp/deps/transfer-hook
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies, remove patch.crates-io" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -368,9 +375,10 @@ if test -d /tmp/deps/memo
     echo "Patching /tmp/deps/memo/Cargo.toml..."
     cd /tmp/deps/memo
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies, remove patch.crates-io" || true
+    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -402,6 +410,18 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     git add Cargo.toml
     git commit -m "Pin zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
+end
+
+if test -d /tmp/deps/anchor/submodules/serum-dex
+    echo "Patching /tmp/deps/anchor/submodules/serum-dex/Cargo.toml..."
+    cd /tmp/deps/anchor/submodules/serum-dex
+    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std"] }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
+    git add Cargo.toml
+    git commit -m "Pin curve25519-dalek to 4.1.3 with std feature and zeroize to 1.3.0, remove patch.crates-io" || true
+    git push origin master || true
 end
 
 # Patch the main project's Cargo.toml
