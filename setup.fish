@@ -50,7 +50,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix curve25519-dalek feature conflict and handle submodules" || true
+    git commit -m "Update setup.fish to fix curve25519-dalek feature conflict and handle openbook-dex" || true
     git push origin main || true
 end
 
@@ -250,7 +250,7 @@ if test -d /tmp/deps/anchor/spl
     echo "Patching /tmp/deps/anchor/spl/Cargo.toml..."
     cd /tmp/deps/anchor/spl
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|serum-dex =.*|serum-dex = { version = "0.5.6", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
+    sed -i 's|openbook-dex =.*|openbook-dex = { git = "https://github.com/openbook-dex/openbook-dex.git", rev = "v0.3.1", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
     sed -i '/spl-token-2022 =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", optional = true }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
@@ -262,10 +262,25 @@ if test -d /tmp/deps/anchor/spl
     sed -i '/spl-memo =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0", optional = true }' Cargo.toml
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
+    # Disable dex feature to avoid openbook-dex conflicts
+    sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix optional dependencies and pin serum-dex to 0.5.6, remove patch.crates-io" || true
+    git commit -m "Fix optional dependencies, pin openbook-dex to v0.3.1, disable dex feature, remove patch.crates-io" || true
     git push origin $branch || true
+end
+
+if test -d /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
+    echo "Patching /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex/Cargo.toml..."
+    cd /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
+    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+    sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
+    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std"] }|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
+    git add Cargo.toml
+    git commit -m "Pin solana-program to safe-pump-compat, curve25519-dalek to 4.1.3 with std feature, zeroize to 1.3.0, remove patch.crates-io" || true
+    git push origin v0.3.1 || true
 end
 
 if test -d /tmp/deps/token-2022/program
@@ -412,18 +427,6 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     git push origin $branch || true
 end
 
-if test -d /tmp/deps/anchor/submodules/serum-dex
-    echo "Patching /tmp/deps/anchor/submodules/serum-dex/Cargo.toml..."
-    cd /tmp/deps/anchor/submodules/serum-dex
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std"] }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to 4.1.3 with std feature and zeroize to 1.3.0, remove patch.crates-io" || true
-    git push origin master || true
-end
-
 # Patch the main project's Cargo.toml
 echo "Patching $project_dir/Cargo.toml..."
 cd $project_dir
@@ -495,7 +498,7 @@ else
     echo "Build failed, check output for errors."
     echo "Generating diagnostic report..."
     cargo build --verbose > /tmp/safe_pump_diagnostic_report.txt 2>&1
-    echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
+    echo "Diagnostic report saved to /tmp/save_pump_diagnostic_report.txt"
     if command -v cargo-tree >/dev/null
         echo "Generating dependency tree for debugging..."
         cargo tree > /tmp/safe_pump_dependency_tree.txt
