@@ -15,10 +15,11 @@ curve25519-dalek-derive = { path = "./curve25519-dalek-derive" }
 curve25519-dalek = { path = "./curve25519-dalek" }
 x25519-dalek = { path = "./x25519-dalek" }
 
+
 [features]
-default = ["alloc", "precomputed-tables", "zeroize"]
-alloc = []
+default = ["std"]
 std = ["alloc", "rand_core/std"]
+alloc = []
 serde = ["serde", "edwards/serde", "montgomery/serde"]
 legacy-compatibility = []
 precomputed-tables = []
