@@ -165,15 +165,36 @@ for repo in $hamkj_repos
     end
 end
 
+# Patch curve25519-dalek to ensure 'std' feature
+if test -d /tmp/deps/curve25519-dalek
+    echo "Patching /tmp/deps/curve25519-dalek/Cargo.toml to add std feature..."
+    cd /tmp/deps/curve25519-dalek
+    sed -i '/\[features\]/,/^\[/{d}' Cargo.toml
+    echo >> Cargo.toml
+    echo '[features]' >> Cargo.toml
+    echo 'default = ["alloc", "precomputed-tables", "zeroize"]' >> Cargo.toml
+    echo 'alloc = []' >> Cargo.toml
+    echo 'std = ["alloc", "rand_core/std"]' >> Cargo.toml
+    echo 'serde = ["serde", "edwards/serde", "montgomery/serde"]' >> Cargo.toml
+    echo 'legacy-compatibility = []' >> Cargo.toml
+    echo 'precomputed-tables = []' >> Cargo.toml
+    echo 'zeroize = ["zeroize", "scalar/zeroize", "group/zeroize"]' >> Cargo.toml
+    echo 'rand_core = ["rand_core"]' >> Cargo.toml
+    echo 'ff = ["ff"]' >> Cargo.toml
+    git add Cargo.toml
+    git commit -m "Add std feature to curve25519-dalek for safe-pump-compat-v2" || true
+    git push origin safe-pump-compat-v2 || true
+end
+
 # Patch dependency Cargo.toml files
 if test -d /tmp/deps/solana/sdk/program
     echo "Patching /tmp/deps/solana/sdk/program/Cargo.toml..."
     cd /tmp/deps/solana/sdk/program
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std"] }|' Cargo.toml
+    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to 4.1.3 with std feature and zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin curve25519-dalek to fork with std feature and zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -181,7 +202,7 @@ if test -d /tmp/deps/zk-elgamal-proof
     echo "Patching /tmp/deps/zk-elgamal-proof/Cargo.toml..."
     cd /tmp/deps/zk-elgamal-proof
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std", "serde"] }|' Cargo.toml
+    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|solana-sdk =.*|solana-sdk = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
@@ -201,7 +222,7 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to 4.1.3 with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin curve25519-dalek to fork with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -216,7 +237,7 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
     sed -i 's|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
     sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std", "serde"] }|' Cargo.toml
+    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
     sed -i 's|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
     sed -i 's|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
     sed -i 's|rand =.*|rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }|' Cargo.toml
@@ -230,7 +251,7 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to 4.1.3 with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin curve25519-dalek to fork with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -275,12 +296,12 @@ if test -d /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
     cd /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std"] }|' Cargo.toml
+    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin solana-program to safe-pump-compat, curve25519-dalek to 4.1.3 with std feature, zeroize to 1.3.0, remove patch.crates-io" || true
-    git push origin v0.3.1 || true
+    git commit -m "Pin solana-program to safe-pump-compat, curve25519-dalek to fork with std feature, zeroize to 1.3.0, remove patch.crates-io" || true
+    # Removed push due to permission issues
 end
 
 if test -d /tmp/deps/token-2022/program
@@ -441,7 +462,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|rand =.*|rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { version = "4.1.3", features = ["std", "serde"] }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|spl-associated-token-account =.*|spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }|' Cargo.toml
@@ -474,7 +495,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "http
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Update dependencies, use crates.io for curve25519-dalek and base64ct" || true
+git commit -m "Update dependencies, use fork for curve25519-dalek" || true
 git push origin main || true
 
 # Clean and build the project
@@ -498,7 +519,7 @@ else
     echo "Build failed, check output for errors."
     echo "Generating diagnostic report..."
     cargo build --verbose > /tmp/safe_pump_diagnostic_report.txt 2>&1
-    echo "Diagnostic report saved to /tmp/save_pump_diagnostic_report.txt"
+    echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
     if command -v cargo-tree >/dev/null
         echo "Generating dependency tree for debugging..."
         cargo tree > /tmp/safe_pump_dependency_tree.txt
