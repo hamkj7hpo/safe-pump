@@ -50,7 +50,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix curve25519-dalek feature resolution and submodule handling" || true
+    git commit -m "Update setup.fish to fix curve25519-dalek and getrandom dependency issues" || true
     git push origin main || true
 end
 
@@ -128,6 +128,13 @@ for repo in $hamkj_repos
                         echo "No master or main branch found in submodule $submodule, skipping..."
                     end
                 end
+                # Commit any uncommitted changes in submodule
+                if git status --porcelain | grep -q .
+                    echo "Committing uncommitted changes in submodule $submodule..."
+                    git add .
+                    git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
+                    git push origin master || git push origin main || true
+                end
                 cd $repo_dir
                 git add .gitmodules $submodule
                 git commit -m "Update submodule $submodule to use SSH and track branch" || true
@@ -185,6 +192,13 @@ for repo in $hamkj_repos
                             echo "No master or main branch found in submodule $submodule, skipping..."
                         end
                     end
+                    # Commit any uncommitted changes in submodule
+                    if git status --porcelain | grep -q .
+                        echo "Committing uncommitted changes in submodule $submodule..."
+                        git add .
+                        git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
+                        git push origin master || git push origin main || true
+                    end
                     cd $repo_dir
                     git add .gitmodules $submodule
                     git commit -m "Update submodule $submodule to use SSH and track branch" || true
@@ -237,9 +251,10 @@ if test -d /tmp/deps/solana/sdk/program
     cd /tmp/deps/solana/sdk/program
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    sed -i 's|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to fork with std feature and zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin curve25519-dalek to fork with std feature, zeroize to 1.3.0, getrandom to master with custom feature, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -267,7 +282,7 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to fork with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin getrandom to master with custom feature, curve25519-dalek with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -294,9 +309,10 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
     sed -i 's|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
+    sed -i 's|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to fork with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin getrandom to master with custom feature, curve25519-dalek with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -330,8 +346,20 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
     sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
+    # Handle uncommitted changes in submodules
+    cd /tmp/deps/anchor
+    for submodule in (git submodule status | awk '{print $2}')
+        cd $submodule
+        if git status --porcelain | grep -q .
+            echo "Committing uncommitted changes in submodule $submodule..."
+            git add .
+            git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
+            git push origin master || git push origin main || true
+        end
+        cd /tmp/deps/anchor/spl
+    end
     git add Cargo.toml .gitmodules
-    git commit -m "Fix optional dependencies, pin openbook-dex to v0.3.1, disable dex feature, remove patch.crates-io, update submodules" || true
+    git commit -m "Fix optional dependencies, pin openbook-dex to v0.3.1, disable dex feature, remove patch.crates-io, commit submodule changes" || true
     git push origin $branch || true
 end
 
@@ -522,7 +550,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { path = "/tmp/de
 sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
@@ -539,7 +567,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "http
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Update dependencies, ensure curve25519-dalek with std feature" || true
+git commit -m "Update dependencies, ensure curve25519-dalek with std feature, getrandom with custom feature" || true
 git push origin main || true
 
 # Clean and build the project
