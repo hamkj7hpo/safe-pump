@@ -32,8 +32,8 @@ subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "m
 thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }
 tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }
 uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }
-wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }
-js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }
+wasm-bindgen = "0.2.93"
+js-sys = "0.3.70"
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }
 
 # Solana fork & SPL dependencies
@@ -64,3 +64,7 @@ cpi = []
 [profile.release]
 overflow-checks = true
 
+
+[patch.crates-io]
+wasm-bindgen = { version = "0.2.93" }
+js-sys = { version = "0.3.70" }
