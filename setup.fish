@@ -139,19 +139,14 @@ for repo in $hamkj_repos
         git submodule sync --recursive
         git submodule init
         mkdir -p examples/cfo/deps
+        git submodule add -f git@github.com:openbook-dex/program.git examples/cfo/deps/openbook-dex 2>/dev/null || true
         if not git submodule update --init --recursive examples/cfo/deps/openbook-dex
             echo "Failed to initialize openbook-dex submodule, attempting manual clone..."
+            rm -rf examples/cfo/deps/openbook-dex
             cd examples/cfo/deps
             git clone git@github.com:openbook-dex/program.git openbook-dex
             cd openbook-dex
-            if test $branch_exists -eq 0
-                git checkout $openbook_commit
-            else
-                git checkout safe-pump-compat || git checkout -b safe-pump-compat $openbook_commit
-            end
-            git branch -f safe-pump-compat $openbook_commit
-            git checkout safe-pump-compat
-            git push origin safe-pump-compat --force || true
+            git checkout $openbook_commit
             cd $repo_dir
             git add examples/cfo/deps/openbook-dex
             git commit -m "Manually initialize openbook-dex submodule at commit $openbook_commit" || true
@@ -164,9 +159,6 @@ for repo in $hamkj_repos
             echo "Fixing openbook-dex submodule to valid commit..."
             git fetch origin
             git checkout $openbook_commit
-            git branch -f safe-pump-compat $openbook_commit
-            git checkout safe-pump-compat
-            git push origin safe-pump-compat --force || true
             cd $repo_dir
             git add examples/cfo/deps/openbook-dex
             git commit -m "Pin openbook-dex submodule to commit $openbook_commit" || true
@@ -216,10 +208,10 @@ if test -d /tmp/deps/solana/sdk/program
     cd /tmp/deps/solana/sdk/program
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    sed -i 's|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
+    sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin curve25519-dalek to fork with std feature, zeroize to 1.3.0, getrandom to master with custom feature, remove patch.crates-io" || true
+    git commit -m "Pin curve25519-dalek to fork with std feature, zeroize to 1.3.0, getrandom to 0.2.15 with custom feature, remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -291,7 +283,7 @@ if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Pin dependencies and remove patch.crates-io" || true
-    git push origin safe-pump-compat || true
+    # Skip pushing to openbook-dex due to permission issues
 end
 
 if test -d /tmp/deps/token-2022/program
@@ -453,7 +445,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git =
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
 git add Cargo.toml
 git commit -m "Pin dependencies and remove patch.crates-io" || true
 git push origin main || true
