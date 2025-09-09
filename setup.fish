@@ -23,7 +23,7 @@ set -l branch safe-pump-compat
 set -l github_user hamkj7hpo
 set -l openbook_commit c85e56deeaead43abbc33b7301058838b9c5136d
 
-echo "setup.fish version 2.4"
+echo "setup.fish version 2.5"
 
 # Ensure git is configured
 echo "Checking git configuration..."
@@ -53,7 +53,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix js-sys patch source conflict, wasm-bindgen-shared conflict, submodule issues, curve25519-dalek, and getrandom dependencies" || true
+    git commit -m "Update setup.fish to fix zeroize version conflict" || true
     git push origin main || true
 end
 
@@ -226,7 +226,7 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies to fix zeroize version conflict and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -238,7 +238,7 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies to fix zeroize version conflict and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -451,9 +451,8 @@ sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git
 sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = "=0.2.93"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "=0.3.70"|' Cargo.toml
-sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
 git add Cargo.toml
-git commit -m "Remove js-sys patch, pin wasm-bindgen to exact version, remove conflicting patch.crates-io" || true
+git commit -m "Pin dependencies to fix zeroize version conflict, remove patch.crates-io" || true
 git push origin main || true
 
 # Clean and build the project
@@ -476,7 +475,7 @@ else
     echo "Build failed, check output for errors."
     echo "Generating diagnostic report..."
     cargo build --verbose > /tmp/safe_pump_diagnostic_report.txt 2>&1
-    echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
+    echo "Diagnostic report saved to /tmp/save_pump_diagnostic_report.txt"
     if command -v cargo-tree >/dev/null
         echo "Generating dependency tree for debugging..."
         cargo tree > /tmp/safe_pump_dependency_tree.txt
@@ -487,6 +486,6 @@ else
     exit 1
 end
 
-echo "setup.fish version 2.4 completed"
-
-# setup.fish version 2.4
+# Always print version at the end
+true
+echo "setup.fish version 2.5 completed"
