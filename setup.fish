@@ -50,7 +50,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix curve25519-dalek and getrandom dependency issues" || true
+    git commit -m "Update setup.fish to fix submodule issues, curve25519-dalek, and getrandom dependencies" || true
     git push origin main || true
 end
 
@@ -69,8 +69,8 @@ for repo in $hamkj_repos
         echo "Warning: SSH access to $repo may not be configured correctly. Attempting to proceed..."
     end
 
-    # Force re-clone for curve25519-dalek to ensure clean state
-    if test "$repo" = "curve25519-dalek"
+    # Force re-clone for anchor and curve25519-dalek to ensure clean state
+    if test "$repo" = "anchor" -o "$repo" = "curve25519-dalek"
         echo "Removing existing $repo_dir to ensure clean clone..."
         rm -rf $repo_dir
     end
@@ -83,137 +83,71 @@ for repo in $hamkj_repos
             git remote set-url origin $repo_url
         end
         git fetch origin
-        set -l current_commit (git rev-parse HEAD)
-        if git status --porcelain | grep -q .
-            echo "Uncommitted changes in $repo, stashing..."
-            git stash
-        end
         echo "Checking out $target_branch for $repo..."
-        if git show-ref --verify --quiet refs/remotes/origin/$target_branch
-            git checkout $target_branch
-            if not git merge-base --is-ancestor $current_commit $target_branch
-                echo "Merging previous commit $current_commit into $target_branch..."
-                git merge --no-ff $current_commit -m "Merge previous commit into $target_branch" || true
-            end
-            git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
-        else
-            echo "Branch $target_branch does not exist, creating..."
-            git checkout -b $target_branch
-            git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
-        end
+        git checkout $target_branch || git checkout -b $target_branch
         git pull origin $target_branch || true
-        if git config -f .gitmodules --get-regexp 'url.*' >/dev/null
-            echo "Updating submodules to use SSH..."
-            git config -f .gitmodules --get-regexp 'url.*' | while read -l line
-                set -l submodule_url (echo $line | awk '{print $2}')
-                set -l submodule_name (echo $line | awk '{print $1}' | sed 's/submodule\.//; s/\.url//')
-                set -l ssh_url (echo $submodule_url | sed 's|https://github.com/|git@github.com:|')
-                git config -f .gitmodules --replace-all "submodule.$submodule_name.url" $ssh_url
-            end
-            git submodule sync
-            git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
-            # Ensure submodules are on a branch
-            for submodule in (git submodule status | awk '{print $2}')
-                cd $submodule
-                set -l current_branch (git branch --show-current)
-                if test -z "$current_branch"
-                    echo "Submodule $submodule is in detached HEAD, checking out master or main..."
-                    if git show-ref --verify --quiet refs/remotes/origin/master
-                        git checkout master
-                        git pull origin master || true
-                    else if git show-ref --verify --quiet refs/remotes/origin/main
-                        git checkout main
-                        git pull origin main || true
-                    else
-                        echo "No master or main branch found in submodule $submodule, skipping..."
-                    end
-                end
-                cd $repo_dir
-                git add .gitmodules $submodule
-                git commit -m "Update submodule $submodule to use SSH and track branch" || true
-                git push origin $target_branch || true
-            end
-        end
-        # Verify anchor-spl package for anchor repository
-        if test "$repo" = "anchor"
-            if test -f spl/Cargo.toml
-                echo "Verifying anchor-spl package in $repo_dir/spl/Cargo.toml..."
-                if grep -q 'name = "anchor-spl"' spl/Cargo.toml
-                    echo "anchor-spl package found in $repo_dir/spl/Cargo.toml."
-                else
-                    echo "Error: anchor-spl package not found in $repo_dir/spl/Cargo.toml."
-                    exit 1
-                end
-            else
-                echo "Error: spl/Cargo.toml not found in $repo_dir."
-                exit 1
-            end
-        end
     else
         echo "Cloning $repo into $repo_dir using SSH..."
-        if git clone $repo_url $repo_dir
+        git clone $repo_url $repo_dir
+        cd $repo_dir
+        git checkout $target_branch || git checkout -b $target_branch
+        git push origin $target_branch --set-upstream || true
+    end
+
+    # Handle submodules for anchor repository
+    if test "$repo" = "anchor"
+        echo "Fixing submodules for anchor..."
+        # Update .gitmodules to correct paths and URLs
+        if test -f .gitmodules
+            echo "Updating .gitmodules to use correct paths and SSH URLs..."
+            sed -i 's|tests/cfo/deps/openbook-dex|examples/cfo/deps/openbook-dex|' .gitmodules
+            sed -i 's|tests/cfo/deps/stake|examples/cfo/deps/stake|' .gitmodules
+            sed -i 's|tests/cfo/deps/swap|examples/cfo/deps/swap|' .gitmodules
+            sed -i 's|https://github.com/openbook-dex/program|git@github.com:openbook-dex/program.git|' .gitmodules
+            sed -i 's|https://github.com/solana-labs/solana-program-library|git@github.com:hamkj7hpo/solana-program-library.git|' .gitmodules
+            git add .gitmodules
+            git commit -m "Update submodule paths and URLs to use SSH and correct paths" || true
+            git push origin $target_branch || true
+        end
+
+        # Initialize and update submodules
+        git submodule sync
+        git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
+
+        # Fix openbook-dex submodule to a valid commit
+        if test -d examples/cfo/deps/openbook-dex
+            cd examples/cfo/deps/openbook-dex
+            echo "Fixing openbook-dex submodule to valid commit..."
+            git fetch origin
+            git checkout c85e56deeaead43abbc33b7301058838b9c5136d
+            git branch -f safe-pump-compat c85e56deeaead43abbc33b7301058838b9c5136d
+            git checkout safe-pump-compat
+            git push origin safe-pump-compat --force || true
             cd $repo_dir
-            if git show-ref --verify --quiet refs/remotes/origin/$target_branch
-                git checkout $target_branch
+            git add examples/cfo/deps/openbook-dex
+            git commit -m "Pin openbook-dex submodule to valid commit c85e56deeaead43abbc33b7301058838b9c5136d" || true
+            git push origin $target_branch || true
+        end
+    end
+
+    # Verify anchor-spl package for anchor repository
+    if test "$repo" = "anchor"
+        if test -f spl/Cargo.toml
+            echo "Verifying anchor-spl package in $repo_dir/spl/Cargo.toml..."
+            if grep -q 'name = "anchor-spl"' spl/Cargo.toml
+                echo "anchor-spl package found in $repo_dir/spl/Cargo.toml."
             else
-                git checkout -b $target_branch
-                git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
-            end
-            if git config -f .gitmodules --get-regexp 'url.*' >/dev/null
-                echo "Configuring submodules to use SSH..."
-                git config -f .gitmodules --get-regexp 'url.*' | while read -l line
-                    set -l submodule_url (echo $line | awk '{print $2}')
-                    set -l submodule_name (echo $line | awk '{print $1}' | sed 's/submodule\.//; s/\.url//')
-                    set -l ssh_url (echo $submodule_url | sed 's|https://github.com/|git@github.com:|')
-                    git config -f .gitmodules --replace-all "submodule.$submodule_name.url" $ssh_url
-                end
-                git submodule sync
-                git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
-                # Ensure submodules are on a branch
-                for submodule in (git submodule status | awk '{print $2}')
-                    cd $submodule
-                    set -l current_branch (git branch --show-current)
-                    if test -z "$current_branch"
-                        echo "Submodule $submodule is in detached HEAD, checking out master or main..."
-                        if git show-ref --verify --quiet refs/remotes/origin/master
-                            git checkout master
-                            git pull origin master || true
-                        else if git show-ref --verify --quiet refs/remotes/origin/main
-                            git checkout main
-                            git pull origin main || true
-                        else
-                            echo "No master or main branch found in submodule $submodule, skipping..."
-                        end
-                    end
-                    cd $repo_dir
-                    git add .gitmodules $submodule
-                    git commit -m "Update submodule $submodule to use SSH and track branch" || true
-                    git push origin $target_branch || true
-                end
-            end
-            # Verify anchor-spl package for anchor repository
-            if test "$repo" = "anchor"
-                if test -f spl/Cargo.toml
-                    echo "Verifying anchor-spl package in $repo_dir/spl/Cargo.toml..."
-                    if grep -q 'name = "anchor-spl"' spl/Cargo.toml
-                        echo "anchor-spl package found in $repo_dir/spl/Cargo.toml."
-                    else
-                        echo "Error: anchor-spl package not found in $repo_dir/spl/Cargo.toml."
-                        exit 1
-                    end
-                else
-                    echo "Error: spl/Cargo.toml not found in $repo_dir."
-                    exit 1
-                end
+                echo "Error: anchor-spl package not found in $repo_dir/spl/Cargo.toml."
+                exit 1
             end
         else
-            echo "Failed to clone $repo. Relying on existing configuration for $repo."
-            continue
+            echo "Error: spl/Cargo.toml not found in $repo_dir."
+            exit 1
         end
     end
 end
 
-# Fix curve25519-dalek workspace Cargo.toml
+# Patch dependency Cargo.toml files
 if test -d /tmp/deps/curve25519-dalek
     echo "Patching /tmp/deps/curve25519-dalek/Cargo.toml to ensure valid workspace manifest..."
     cd /tmp/deps/curve25519-dalek
@@ -221,7 +155,6 @@ if test -d /tmp/deps/curve25519-dalek
     git add Cargo.toml
     git commit -m "Remove invalid [features] section from workspace Cargo.toml" || true
     git push origin safe-pump-compat-v2 || true
-    # Ensure curve25519-dalek/Cargo.toml has std feature
     if ! grep -q 'std = \["alloc", "rand_core/std"\]' curve25519-dalek/Cargo.toml
         echo "Adding std feature to curve25519-dalek/Cargo.toml..."
         sed -i '/\[features\]/a std = ["alloc", "rand_core/std"]' curve25519-dalek/Cargo.toml
@@ -231,7 +164,6 @@ if test -d /tmp/deps/curve25519-dalek
     end
 end
 
-# Patch dependency Cargo.toml files
 if test -d /tmp/deps/solana/sdk/program
     echo "Patching /tmp/deps/solana/sdk/program/Cargo.toml..."
     cd /tmp/deps/solana/sdk/program
@@ -250,55 +182,20 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    sed -i 's|solana-sdk =.*|solana-sdk = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
-    sed -i 's|base64 =.*|base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }|' Cargo.toml
-    sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
-    sed -i 's|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
-    sed -i 's|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
-    sed -i 's|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
-    sed -i 's|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
-    sed -i 's|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
-    sed -i 's|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
-    sed -i 's|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
-    sed -i 's|rand =.*|rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }|' Cargo.toml
-    sed -i 's|serde =.*|serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-    sed -i 's|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
-    sed -i 's|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
-    sed -i 's|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin getrandom to master with custom feature, curve25519-dalek with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
 if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     echo "Patching /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml..."
     cd /tmp/deps/zk-elgamal-proof/zk-sdk
-    sed -i 's|base64 =.*|base64 = { git = "https://github.com/marshallpierce/rust-base64.git", branch = "master" }|' Cargo.toml
-    sed -i 's|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
-    sed -i 's|bytemuck_derive =.*|bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
-    sed -i 's|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
-    sed -i 's|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
-    sed -i 's|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
-    sed -i 's|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
-    sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
-    sed -i 's|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
-    sed -i 's|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
-    sed -i 's|rand =.*|rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }|' Cargo.toml
-    sed -i 's|serde =.*|serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-    sed -i 's|serde_derive =.*|serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-    sed -i 's|serde_json =.*|serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }|' Cargo.toml
-    sed -i 's|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
-    sed -i 's|subtle =.*|subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-    sed -i 's|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
-    sed -i 's|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
-    sed -i 's|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin getrandom to master with custom feature, curve25519-dalek with std and serde features, zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -310,7 +207,7 @@ if test -d /tmp/deps/spl-pod
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -318,7 +215,7 @@ if test -d /tmp/deps/anchor/spl
     echo "Patching /tmp/deps/anchor/spl/Cargo.toml..."
     cd /tmp/deps/anchor/spl
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|openbook-dex =.*|openbook-dex = { git = "https://github.com/openbook-dex/openbook-dex.git", rev = "c85e56deeaead43abbc33b7301058838b9c5136d", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
+    sed -i 's|openbook-dex =.*|openbook-dex = { git = "https://github.com/openbook-dex/program.git", rev = "c85e56deeaead43abbc33b7301058838b9c5136d", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
     sed -i '/spl-token-2022 =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", optional = true }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
@@ -332,28 +229,9 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
     sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    # Handle uncommitted changes in submodules
-    cd /tmp/deps/anchor
-    if test -f .gitmodules
-        for submodule in (git submodule status | awk '{print $2}')
-            if test -d $submodule
-                cd $submodule
-                if git status --porcelain | grep -q .
-                    echo "Committing uncommitted changes in submodule $submodule..."
-                    git add .
-                    git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
-                    git push origin master || git push origin main || true
-                end
-                cd /tmp/deps/anchor
-            end
-        end
-        git add Cargo.toml
-        if test -f .gitmodules
-            git add .gitmodules
-        end
-        git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io, commit submodule changes" || true
-        git push origin $branch || true
-    end
+    git add Cargo.toml
+    git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io" || true
+    git push origin $branch || true
 end
 
 if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
@@ -365,8 +243,7 @@ if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin solana-program to safe-pump-compat, curve25519-dalek to fork with std feature, zeroize to 1.3.0, remove patch.crates-io" || true
-    # Avoid pushing due to potential permission issues in submodule
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
 end
 
 if test -d /tmp/deps/token-2022/program
@@ -385,7 +262,7 @@ if test -d /tmp/deps/token-2022/program
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -399,7 +276,7 @@ if test -d /tmp/deps/associated-token-account/program
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -410,7 +287,7 @@ if test -d /tmp/deps/solana-program-library
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -420,7 +297,7 @@ if test -d /tmp/deps/solana-program-library/libraries/discriminator
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -432,7 +309,7 @@ if test -d /tmp/deps/spl-type-length-value
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -445,7 +322,7 @@ if test -d /tmp/deps/token-group
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -457,7 +334,7 @@ if test -d /tmp/deps/token-metadata
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -468,7 +345,7 @@ if test -d /tmp/deps/transfer-hook
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -479,7 +356,7 @@ if test -d /tmp/deps/memo
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Update dependencies and pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -491,7 +368,7 @@ if test -d /tmp/deps/raydium-cp-swap
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
@@ -500,67 +377,37 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     cd /tmp/deps/raydium-cp-swap/programs/cp-swap
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|spl-token-2022 =.*|spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }|' Cargo.toml
-    sed -i 's|spl-math =.*|spl-math = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-math" }|' Cargo.toml
-    sed -i 's|arrayref =.*|arrayref = { git = "https://github.com/droundy/arrayref.git", branch = "master" }|' Cargo.toml
-    sed -i 's|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
-    sed -i 's|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
-    sed -i 's|bincode =.*|bincode = "1.3.3"|' Cargo.toml
+    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to 1.3.0, remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io" || true
     git push origin $branch || true
 end
 
 # Patch the main project's Cargo.toml
 echo "Patching $project_dir/Cargo.toml..."
 cd $project_dir
-# Remove any existing [patch.crates-io] section to avoid conflicts
 sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-# Update dependencies section to ensure correct versions and sources
-sed -i '/\[dependencies\]/,/^\[/ s|base64ct =.*|base64ct = "1.6.0"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|bincode =.*|bincode = "1.3.3"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|bytemuck =.*|bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|bytemuck_derive =.*|bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|rand =.*|rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|sha3 =.*|sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|merlin =.*|merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-associated-token-account =.*|spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-tlv-account-resolution =.*|spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-token-2022 =.*|spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-memo =.*|spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-transfer-hook-interface =.*|spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-token-metadata-interface =.*|spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|spl-token-group-interface =.*|spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|anchor-lang =.*|anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang", features = ["init-if-needed"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { path = "/tmp/deps/anchor/spl", default-features = false }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-token-2022 =.*|spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-associated-token-account =.*|spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-tlv-account-resolution =.*|spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-token-group-interface =.*|spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-token-metadata-interface =.*|spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-transfer-hook-interface =.*|spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|spl-memo =.*|spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|light-poseidon =.*|light-poseidon = "0.3.0"|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|itertools =.*|itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|lazy_static =.*|lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|num =.*|num = { git = "https://github.com/rust-num/num.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|num-derive =.*|num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|num-traits =.*|num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|serde =.*|serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|serde_derive =.*|serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|serde_json =.*|serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|subtle =.*|subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|thiserror =.*|thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|tiny-bip39 =.*|tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|uint =.*|uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", branch = "main" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", package = "js-sys" }|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|aes-gcm-siv =.*|aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }|' Cargo.toml
 git add Cargo.toml
-git commit -m "Update dependencies, ensure curve25519-dalek with std feature, getrandom with custom feature" || true
+git commit -m "Pin dependencies and remove patch.crates-io" || true
 git push origin main || true
 
 # Clean and build the project
@@ -568,7 +415,6 @@ echo "Cleaning and building project..."
 cd $project_dir
 cargo clean
 rm -f Cargo.lock
-# Manually clear Cargo cache to avoid stale dependencies
 rm -rf ~/.cargo/registry/cache ~/.cargo/git
 git config --global credential.helper 'cache --timeout=3600'
 if cargo build
@@ -594,4 +440,3 @@ else
     end
     exit 1
 end
-```
