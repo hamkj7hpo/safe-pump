@@ -51,7 +51,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix submodule issues, curve25519-dalek, and getrandom dependencies" || true
+    git commit -m "Update setup.fish to fix wasm-bindgen-shared conflict, submodule issues, curve25519-dalek, and getrandom dependencies" || true
     git push origin main || true
 end
 
@@ -447,9 +447,12 @@ sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git =
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = "0.2.93"|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "0.3.70"|' Cargo.toml
+sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
+echo -e "\n[patch.crates-io]\nwasm-bindgen = { version = \"0.2.93\" }\njs-sys = { version = \"0.3.70\" }" >> Cargo.toml
 git add Cargo.toml
-git commit -m "Pin dependencies and remove patch.crates-io" || true
+git commit -m "Pin wasm-bindgen and js-sys to consistent versions, remove conflicting patch.crates-io" || true
 git push origin main || true
 
 # Clean and build the project
@@ -483,4 +486,4 @@ else
     exit 1
 end
 
-# setup.fish version 2.0
+# setup.fish version 2.1
