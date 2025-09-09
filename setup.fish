@@ -103,44 +103,37 @@ for repo in $hamkj_repos
         if test -d .git/modules
             rm -rf .git/modules/*
         end
-        if test -d examples/cfo/deps
-            rm -rf examples/cfo/deps/*
-        end
+        rm -rf tests/cfo/deps examples/cfo/deps
 
-        # Ensure .gitmodules is correct
-        if test ! -f .gitmodules
-            echo "Creating .gitmodules file..."
-            echo "[submodule \"examples/cfo/deps/openbook-dex\"]" > .gitmodules
-            echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
-            echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
-            echo "    branch = safe-pump-compat" >> .gitmodules
+        # Update .gitmodules for openbook-dex
+        echo "Updating .gitmodules for openbook-dex..."
+        sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
+        if ! grep -q 'branch = ' .gitmodules
+            sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/path = /a branch = safe-pump-compat' .gitmodules
         else
-            echo "Updating .gitmodules to use correct paths and SSH URLs..."
-            # Remove stale submodule entries
-            sed -i '/\[submodule "tests\/cfo\/deps\/.*"\]/,/^\[/d' .gitmodules
-            # Ensure openbook-dex submodule is correctly configured
-            if ! grep -q '\[submodule "examples/cfo/deps/openbook-dex"\]' .gitmodules
-                echo "[submodule \"examples/cfo/deps/openbook-dex\"]" >> .gitmodules
-                echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
-                echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
-                echo "    branch = safe-pump-compat" >> .gitmodules
-            else
-                sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
-                sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|path = .*|path = examples/cfo/deps/openbook-dex|' .gitmodules
-                sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
-            end
+            sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
         end
         git add .gitmodules
-        git commit -m "Update .gitmodules to use correct submodule path and SSH URL" || true
+        git commit -m "Update openbook-dex submodule URL and branch" || true
         git push origin $target_branch || true
 
-        # Synchronize and initialize submodules
-        echo "Synchronizing and initializing submodules..."
+        # Synchronize and initialize the old submodule
+        echo "Synchronizing and initializing old submodule..."
         git submodule sync --recursive
-        mkdir -p examples/cfo/deps
-        git submodule update --init --recursive || echo "Failed to update submodules, attempting manual fix..."
+        git submodule update --init --recursive tests/cfo/deps/openbook-dex || echo "Failed to initialize old submodule, proceeding..."
 
-        # Fix openbook-dex submodule to a valid commit
+        # Move the submodule to the new path
+        mkdir -p examples/cfo/deps
+        git mv tests/cfo/deps/openbook-dex examples/cfo/deps/openbook-dex || echo "Move failed, perhaps old path not present"
+
+        # Update .gitmodules for new path
+        sed -i 's|\[submodule "tests/cfo/deps/openbook-dex"\]|\[submodule "examples/cfo/deps/openbook-dex"\]|' .gitmodules
+        sed -i 's|path = tests/cfo/deps/openbook-dex|path = examples/cfo/deps/openbook-dex|' .gitmodules
+        git add .gitmodules
+        git commit -m "Move openbook-dex submodule to examples/cfo/deps/openbook-dex" || true
+        git push origin $target_branch || true
+
+        # Fix openbook-dex submodule to valid commit
         if test -d examples/cfo/deps/openbook-dex
             cd examples/cfo/deps/openbook-dex
             echo "Fixing openbook-dex submodule to valid commit..."
