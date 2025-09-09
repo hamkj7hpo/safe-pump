@@ -51,7 +51,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix wasm-bindgen-shared conflict, submodule issues, curve25519-dalek, and getrandom dependencies" || true
+    git commit -m "Update setup.fish to fix js-sys patch conflict, wasm-bindgen-shared conflict, submodule issues, curve25519-dalek, and getrandom dependencies" || true
     git push origin main || true
 end
 
@@ -450,9 +450,9 @@ sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = "0.2.93"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "0.3.70"|' Cargo.toml
 sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-echo -e "\n[patch.crates-io]\nwasm-bindgen = { version = \"0.2.93\" }\njs-sys = { version = \"0.3.70\" }" >> Cargo.toml
+echo -e "\n[patch.crates-io]\nwasm-bindgen = { version = \"=0.2.93\" }\njs-sys = { version = \"=0.3.70\" }" >> Cargo.toml
 git add Cargo.toml
-git commit -m "Pin wasm-bindgen and js-sys to consistent versions, remove conflicting patch.crates-io" || true
+git commit -m "Pin wasm-bindgen and js-sys to exact versions, remove conflicting patch.crates-io" || true
 git push origin main || true
 
 # Clean and build the project
@@ -486,4 +486,4 @@ else
     exit 1
 end
 
-# setup.fish version 2.1
+# setup.fish version 2.2
