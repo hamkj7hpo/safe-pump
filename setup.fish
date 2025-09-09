@@ -50,7 +50,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix curve25519-dalek and getrandom dependency issues" || true
+    git commit -m "Update setup.fish to fix submodule issues, curve25519-dalek, and getrandom dependencies" || true
     git push origin main || true
 end
 
@@ -102,7 +102,7 @@ for repo in $hamkj_repos
             git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
         end
         git pull origin $target_branch || true
-        if git config -f .gitmodules --get-regexp 'url.*' >/dev/null
+        if test -f .gitmodules
             echo "Updating submodules to use SSH..."
             git config -f .gitmodules --get-regexp 'url.*' | while read -l line
                 set -l submodule_url (echo $line | awk '{print $2}')
@@ -114,31 +114,33 @@ for repo in $hamkj_repos
             git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
             # Ensure submodules are on a branch
             for submodule in (git submodule status | awk '{print $2}')
-                cd $submodule
-                set -l current_branch (git branch --show-current)
-                if test -z "$current_branch"
-                    echo "Submodule $submodule is in detached HEAD, checking out master or main..."
-                    if git show-ref --verify --quiet refs/remotes/origin/master
-                        git checkout master
-                        git pull origin master || true
-                    else if git show-ref --verify --quiet refs/remotes/origin/main
-                        git checkout main
-                        git pull origin main || true
-                    else
-                        echo "No master or main branch found in submodule $submodule, skipping..."
+                if test -d $submodule
+                    cd $submodule
+                    set -l current_branch (git branch --show-current)
+                    if test -z "$current_branch"
+                        echo "Submodule $submodule is in detached HEAD, checking out master or main..."
+                        if git show-ref --verify --quiet refs/remotes/origin/master
+                            git checkout master
+                            git pull origin master || true
+                        else if git show-ref --verify --quiet refs/remotes/origin/main
+                            git checkout main
+                            git pull origin main || true
+                        else
+                            echo "No master or main branch found in submodule $submodule, skipping..."
+                        end
                     end
+                    # Commit any uncommitted changes in submodule
+                    if git status --porcelain | grep -q .
+                        echo "Committing uncommitted changes in submodule $submodule..."
+                        git add .
+                        git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
+                        git push origin master || git push origin main || true
+                    end
+                    cd $repo_dir
+                    git add $submodule
+                    git commit -m "Update submodule $submodule to use SSH and track branch" || true
+                    git push origin $target_branch || true
                 end
-                # Commit any uncommitted changes in submodule
-                if git status --porcelain | grep -q .
-                    echo "Committing uncommitted changes in submodule $submodule..."
-                    git add .
-                    git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
-                    git push origin master || git push origin main || true
-                end
-                cd $repo_dir
-                git add .gitmodules $submodule
-                git commit -m "Update submodule $submodule to use SSH and track branch" || true
-                git push origin $target_branch || true
             end
         end
         # Verify anchor-spl package for anchor repository
@@ -166,7 +168,7 @@ for repo in $hamkj_repos
                 git checkout -b $target_branch
                 git push origin $target_branch || echo "Failed to push $target_branch for $repo, may need manual setup."
             end
-            if git config -f .gitmodules --get-regexp 'url.*' >/dev/null
+            if test -f .gitmodules
                 echo "Configuring submodules to use SSH..."
                 git config -f .gitmodules --get-regexp 'url.*' | while read -l line
                     set -l submodule_url (echo $line | awk '{print $2}')
@@ -178,31 +180,33 @@ for repo in $hamkj_repos
                 git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
                 # Ensure submodules are on a branch
                 for submodule in (git submodule status | awk '{print $2}')
-                    cd $submodule
-                    set -l current_branch (git branch --show-current)
-                    if test -z "$current_branch"
-                        echo "Submodule $submodule is in detached HEAD, checking out master or main..."
-                        if git show-ref --verify --quiet refs/remotes/origin/master
-                            git checkout master
-                            git pull origin master || true
-                        else if git show-ref --verify --quiet refs/remotes/origin/main
-                            git checkout main
-                            git pull origin main || true
-                        else
-                            echo "No master or main branch found in submodule $submodule, skipping..."
+                    if test -d $submodule
+                        cd $submodule
+                        set -l current_branch (git branch --show-current)
+                        if test -z "$current_branch"
+                            echo "Submodule $submodule is in detached HEAD, checking out master or main..."
+                            if git show-ref --verify --quiet refs/remotes/origin/master
+                                git checkout master
+                                git pull origin master || true
+                            else if git show-ref --verify --quiet refs/remotes/origin/main
+                                git checkout main
+                                git pull origin main || true
+                            else
+                                echo "No master or main branch found in submodule $submodule, skipping..."
+                            end
                         end
+                        # Commit any uncommitted changes in submodule
+                        if git status --porcelain | grep -q .
+                            echo "Committing uncommitted changes in submodule $submodule..."
+                            git add .
+                            git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
+                            git push origin master || git push origin main || true
+                        end
+                        cd $repo_dir
+                        git add $submodule
+                        git commit -m "Update submodule $submodule to use SSH and track branch" || true
+                        git push origin $target_branch || true
                     end
-                    # Commit any uncommitted changes in submodule
-                    if git status --porcelain | grep -q .
-                        echo "Committing uncommitted changes in submodule $submodule..."
-                        git add .
-                        git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
-                        git push origin master || git push origin main || true
-                    end
-                    cd $repo_dir
-                    git add .gitmodules $submodule
-                    git commit -m "Update submodule $submodule to use SSH and track branch" || true
-                    git push origin $target_branch || true
                 end
             end
             # Verify anchor-spl package for anchor repository
@@ -332,7 +336,7 @@ if test -d /tmp/deps/anchor/spl
     echo "Patching /tmp/deps/anchor/spl/Cargo.toml..."
     cd /tmp/deps/anchor/spl
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|openbook-dex =.*|openbook-dex = { git = "https://github.com/openbook-dex/openbook-dex.git", rev = "v0.3.1", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
+    sed -i 's|openbook-dex =.*|openbook-dex = { git = "https://github.com/openbook-dex/openbook-dex.git", rev = "c85e56deeaead43abbc33b7301058838b9c5136d", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
     sed -i '/spl-token-2022 =/d' Cargo.toml
     sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", optional = true }' Cargo.toml
     sed -i '/spl-associated-token-account =/d' Cargo.toml
@@ -348,24 +352,31 @@ if test -d /tmp/deps/anchor/spl
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     # Handle uncommitted changes in submodules
     cd /tmp/deps/anchor
-    for submodule in (git submodule status | awk '{print $2}')
-        cd $submodule
-        if git status --porcelain | grep -q .
-            echo "Committing uncommitted changes in submodule $submodule..."
-            git add .
-            git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
-            git push origin master || git push origin main || true
+    if test -f .gitmodules
+        for submodule in (git submodule status | awk '{print $2}')
+            if test -d $submodule
+                cd $submodule
+                if git status --porcelain | grep -q .
+                    echo "Committing uncommitted changes in submodule $submodule..."
+                    git add .
+                    git commit -m "Commit untracked or modified files in $submodule for safe-pump-compat" || true
+                    git push origin master || git push origin main || true
+                end
+                cd /tmp/deps/anchor
+            end
         end
-        cd /tmp/deps/anchor/spl
+        git add Cargo.toml
+        if test -f .gitmodules
+            git add .gitmodules
+        end
+        git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io, commit submodule changes" || true
+        git push origin $branch || true
     end
-    git add Cargo.toml .gitmodules
-    git commit -m "Fix optional dependencies, pin openbook-dex to v0.3.1, disable dex feature, remove patch.crates-io, commit submodule changes" || true
-    git push origin $branch || true
 end
 
-if test -d /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
-    echo "Patching /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex/Cargo.toml..."
-    cd /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
+if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
+    echo "Patching /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex/Cargo.toml..."
+    cd /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
