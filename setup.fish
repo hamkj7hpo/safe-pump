@@ -105,33 +105,21 @@ for repo in $hamkj_repos
         end
         rm -rf tests/cfo/deps examples/cfo/deps
 
-        # Update .gitmodules for openbook-dex
-        echo "Updating .gitmodules for openbook-dex..."
-        sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
-        if ! grep -q 'branch = ' .gitmodules
-            sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/path = /a branch = safe-pump-compat' .gitmodules
-        else
-            sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
-        end
+        # Create or overwrite .gitmodules with correct openbook-dex configuration
+        echo "Creating/Updating .gitmodules for openbook-dex..."
+        echo "[submodule \"examples/cfo/deps/openbook-dex\"]" > .gitmodules
+        echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
+        echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
+        echo "    branch = safe-pump-compat" >> .gitmodules
         git add .gitmodules
-        git commit -m "Update openbook-dex submodule URL and branch" || true
+        git commit -m "Update .gitmodules to configure openbook-dex submodule at examples/cfo/deps/openbook-dex" || true
         git push origin $target_branch || true
 
-        # Synchronize and initialize the old submodule
-        echo "Synchronizing and initializing old submodule..."
+        # Synchronize and initialize submodules
+        echo "Synchronizing and initializing submodules..."
         git submodule sync --recursive
-        git submodule update --init --recursive tests/cfo/deps/openbook-dex || echo "Failed to initialize old submodule, proceeding..."
-
-        # Move the submodule to the new path
         mkdir -p examples/cfo/deps
-        git mv tests/cfo/deps/openbook-dex examples/cfo/deps/openbook-dex || echo "Move failed, perhaps old path not present"
-
-        # Update .gitmodules for new path
-        sed -i 's|\[submodule "tests/cfo/deps/openbook-dex"\]|\[submodule "examples/cfo/deps/openbook-dex"\]|' .gitmodules
-        sed -i 's|path = tests/cfo/deps/openbook-dex|path = examples/cfo/deps/openbook-dex|' .gitmodules
-        git add .gitmodules
-        git commit -m "Move openbook-dex submodule to examples/cfo/deps/openbook-dex" || true
-        git push origin $target_branch || true
+        git submodule update --init --recursive examples/cfo/deps/openbook-dex || echo "Failed to initialize submodule, attempting manual fix..."
 
         # Fix openbook-dex submodule to valid commit
         if test -d examples/cfo/deps/openbook-dex
@@ -167,7 +155,7 @@ for repo in $hamkj_repos
             exit 1
         end
     end
-end # Close the for loop for hamkj_repos
+end
 
 # Patch dependency Cargo.toml files
 if test -d /tmp/deps/curve25519-dalek
@@ -266,6 +254,7 @@ if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git push origin safe-pump-compat || true
 end
 
 if test -d /tmp/deps/token-2022/program
