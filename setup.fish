@@ -50,7 +50,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix curve25519-dalek virtual manifest and ensure compatibility" || true
+    git commit -m "Update setup.fish to fix curve25519-dalek feature resolution and submodule handling" || true
     git push origin main || true
 end
 
@@ -112,6 +112,27 @@ for repo in $hamkj_repos
             end
             git submodule sync
             git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
+            # Ensure submodules are on a branch
+            for submodule in (git submodule status | awk '{print $2}')
+                cd $submodule
+                set -l current_branch (git branch --show-current)
+                if test -z "$current_branch"
+                    echo "Submodule $submodule is in detached HEAD, checking out master or main..."
+                    if git show-ref --verify --quiet refs/remotes/origin/master
+                        git checkout master
+                        git pull origin master || true
+                    else if git show-ref --verify --quiet refs/remotes/origin/main
+                        git checkout main
+                        git pull origin main || true
+                    else
+                        echo "No master or main branch found in submodule $submodule, skipping..."
+                    end
+                end
+                cd $repo_dir
+                git add .gitmodules $submodule
+                git commit -m "Update submodule $submodule to use SSH and track branch" || true
+                git push origin $target_branch || true
+            end
         end
         # Verify anchor-spl package for anchor repository
         if test "$repo" = "anchor"
@@ -148,6 +169,27 @@ for repo in $hamkj_repos
                 end
                 git submodule sync
                 git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
+                # Ensure submodules are on a branch
+                for submodule in (git submodule status | awk '{print $2}')
+                    cd $submodule
+                    set -l current_branch (git branch --show-current)
+                    if test -z "$current_branch"
+                        echo "Submodule $submodule is in detached HEAD, checking out master or main..."
+                        if git show-ref --verify --quiet refs/remotes/origin/master
+                            git checkout master
+                            git pull origin master || true
+                        else if git show-ref --verify --quiet refs/remotes/origin/main
+                            git checkout main
+                            git pull origin main || true
+                        else
+                            echo "No master or main branch found in submodule $submodule, skipping..."
+                        end
+                    end
+                    cd $repo_dir
+                    git add .gitmodules $submodule
+                    git commit -m "Update submodule $submodule to use SSH and track branch" || true
+                    git push origin $target_branch || true
+                end
             end
             # Verify anchor-spl package for anchor repository
             if test "$repo" = "anchor"
@@ -179,6 +221,14 @@ if test -d /tmp/deps/curve25519-dalek
     git add Cargo.toml
     git commit -m "Remove invalid [features] section from workspace Cargo.toml" || true
     git push origin safe-pump-compat-v2 || true
+    # Ensure curve25519-dalek/Cargo.toml has std feature
+    if ! grep -q 'std = \["alloc", "rand_core/std"\]' curve25519-dalek/Cargo.toml
+        echo "Adding std feature to curve25519-dalek/Cargo.toml..."
+        sed -i '/\[features\]/a std = ["alloc", "rand_core/std"]' curve25519-dalek/Cargo.toml
+        git add curve25519-dalek/Cargo.toml
+        git commit -m "Ensure std feature in curve25519-dalek for safe-pump compatibility" || true
+        git push origin safe-pump-compat-v2 || true
+    end
 end
 
 # Patch dependency Cargo.toml files
@@ -280,8 +330,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
     sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git add ../.gitmodules
+    git add Cargo.toml .gitmodules
     git commit -m "Fix optional dependencies, pin openbook-dex to v0.3.1, disable dex feature, remove patch.crates-io, update submodules" || true
     git push origin $branch || true
 end
@@ -296,7 +345,7 @@ if test -d /tmp/deps/anchor/tests/cfo/deps/openbook-dex/dex
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Pin solana-program to safe-pump-compat, curve25519-dalek to fork with std feature, zeroize to 1.3.0, remove patch.crates-io" || true
-    # Removed push due to permission issues
+    # Avoid pushing due to potential permission issues in submodule
 end
 
 if test -d /tmp/deps/token-2022/program
