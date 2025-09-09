@@ -221,6 +221,7 @@ if test -d /tmp/deps/zk-elgamal-proof
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Pin dependencies and remove patch.crates-io" || true
@@ -232,6 +233,7 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     cd /tmp/deps/zk-elgamal-proof/zk-sdk
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Pin dependencies and remove patch.crates-io" || true
@@ -480,3 +482,5 @@ else
     end
     exit 1
 end
+
+# setup.fish version 2.0
