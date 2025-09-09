@@ -23,6 +23,8 @@ set -l branch safe-pump-compat
 set -l github_user hamkj7hpo
 set -l openbook_commit c85e56deeaead43abbc33b7301058838b9c5136d
 
+echo "setup.fish version 2.4"
+
 # Ensure git is configured
 echo "Checking git configuration..."
 if not git config user.name >/dev/null || not git config user.email >/dev/null
@@ -447,10 +449,9 @@ sed -i '/\[dependencies\]/,/^\[/ s|raydium-cp-swap =.*|raydium-cp-swap = { git =
 sed -i '/\[dependencies\]/,/^\[/ s|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = "0.2.93"|' Cargo.toml
-sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "0.3.70"|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = "=0.2.93"|' Cargo.toml
+sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "=0.3.70"|' Cargo.toml
 sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-echo -e "\n[patch.crates-io]\nwasm-bindgen = { version = \"=0.2.93\" }" >> Cargo.toml
 git add Cargo.toml
 git commit -m "Remove js-sys patch, pin wasm-bindgen to exact version, remove conflicting patch.crates-io" || true
 git push origin main || true
@@ -486,4 +487,6 @@ else
     exit 1
 end
 
-# setup.fish version 2.3
+echo "setup.fish version 2.4 completed"
+
+# setup.fish version 2.4
