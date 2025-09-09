@@ -99,27 +99,36 @@ for repo in $hamkj_repos
         echo "Fixing submodules for anchor..."
         # Clean stale submodule state
         echo "Cleaning submodule state..."
-        git submodule deinit -f . 2>/dev/null || true
+        git submodule deinit -f --all 2>/dev/null || true
         if test -d .git/modules
             rm -rf .git/modules/*
         end
         rm -rf tests/cfo/deps examples/cfo/deps
 
-        # Create or overwrite .gitmodules with correct openbook-dex configuration
-        echo "Creating/Updating .gitmodules for openbook-dex..."
-        echo "[submodule \"examples/cfo/deps/openbook-dex\"]" > .gitmodules
-        echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
-        echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
-        echo "    branch = safe-pump-compat" >> .gitmodules
+        # Ensure .gitmodules is correct
+        echo "Updating .gitmodules to use correct paths and SSH URLs..."
+        sed -i '/\[submodule "tests\/cfo\/deps\/.*"\]/,/^\[/d' .gitmodules
+        git rm -r --cached tests/cfo/deps 2>/dev/null || true
+        if ! grep -q '\[submodule "examples/cfo/deps/openbook-dex"\]' .gitmodules
+            echo "[submodule \"examples/cfo/deps/openbook-dex\"]" >> .gitmodules
+            echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
+            echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
+            echo "    branch = safe-pump-compat" >> .gitmodules
+        else
+            sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
+            sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|path = .*|path = examples/cfo/deps/openbook-dex|' .gitmodules
+            sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
+        end
         git add .gitmodules
-        git commit -m "Update .gitmodules to configure openbook-dex submodule at examples/cfo/deps/openbook-dex" || true
+        git commit -m "Remove stale tests/cfo submodules, add/update openbook-dex at examples/cfo/deps" || true
         git push origin $target_branch || true
 
         # Synchronize and initialize submodules
         echo "Synchronizing and initializing submodules..."
         git submodule sync --recursive
+        git submodule init
         mkdir -p examples/cfo/deps
-        git submodule update --init --recursive examples/cfo/deps/openbook-dex || echo "Failed to initialize submodule, attempting manual fix..."
+        git submodule update --recursive || echo "Failed to update submodules, attempting manual fix..."
 
         # Fix openbook-dex submodule to valid commit
         if test -d examples/cfo/deps/openbook-dex
@@ -155,7 +164,184 @@ for repo in $hamkj_repos
             exit 1
         end
     end
+end # Close the for loop for hamkj_repos
+
+# The rest of the script remains the same as previous
+# Patch dependency Cargo.toml files
+# ... (omitted for brevity, assume same as before)
+
+# Patch the main project's Cargo.toml
+# ...
+
+# Clean and build the project
+# ...```fish
+#!/usr/bin/env fish
+
+# Define existing hamkj7hpo repositories
+set -l hamkj_repos \
+    "solana" \
+    "spl-pod" \
+    "anchor" \
+    "zk-elgamal-proof" \
+    "token-2022" \
+    "associated-token-account" \
+    "solana-program-library" \
+    "spl-type-length-value" \
+    "token-group" \
+    "token-metadata" \
+    "transfer-hook" \
+    "memo" \
+    "raydium-cp-swap" \
+    "curve25519-dalek"
+
+set -l tmp_dir /tmp/deps
+set -l project_dir /var/www/html/program/safe_pump
+set -l branch safe-pump-compat
+set -l github_user hamkj7hpo
+
+# Ensure git is configured
+echo "Checking git configuration..."
+if not git config user.name >/dev/null || not git config user.email >/dev/null
+    echo "Git user.name or user.email not set. Please configure git:"
+    echo "  git config --global user.name 'Your Name'"
+    echo "  git config --global user.email 'your.email@example.com'"
+    exit 1
 end
+
+# Verify global SSH access to GitHub
+echo "Verifying global SSH access to GitHub..."
+if not ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"
+    echo "SSH key not set up correctly for GitHub. Please ensure your SSH key is added to your GitHub account."
+    echo "See: https://docs.github.com/en/authentication/connecting-to-github-with-ssh"
+    exit 1
+end
+
+# Remove untracked files
+cd $project_dir
+if git status --porcelain | grep -q "setup.fish.save"
+    echo "Removing untracked setup.fish.save files..."
+    rm -f setup.fish.save*
+end
+
+# Commit any changes to setup.fish
+if git status --porcelain | grep -q "setup.fish"
+    echo "Committing changes to setup.fish..."
+    git add setup.fish
+    git commit -m "Update setup.fish to fix submodule issues, curve25519-dalek, and getrandom dependencies" || true
+    git push origin main || true
+end
+
+# Create temporary directory for dependencies
+mkdir -p $tmp_dir
+
+# Process existing hamkj7hpo repositories
+for repo in $hamkj_repos
+    set -l repo_dir $tmp_dir/$repo
+    set -l repo_url git@github.com:$github_user/$repo.git
+    set -l target_branch (test "$repo" = "curve25519-dalek" && echo "safe-pump-compat-v2" || echo $branch)
+
+    echo "Processing $repo into $repo_dir..."
+    echo "Verifying SSH access for $repo..."
+    if not ssh -T git@github.com -o StrictHostKeyChecking=no 2>&1 | grep -q "successfully authenticated"
+        echo "Warning: SSH access to $repo may not be configured correctly. Attempting to proceed..."
+    end
+
+    # Force re-clone for anchor and curve25519-dalek to ensure clean state
+    if test "$repo" = "anchor" -o "$repo" = "curve25519-dalek"
+        echo "Removing existing $repo_dir to ensure clean clone..."
+        rm -rf $repo_dir
+    end
+
+    if test -d $repo_dir
+        echo "$repo_dir already exists, updating..."
+        cd $repo_dir
+        if not git remote get-url origin | grep -q "git@github.com"
+            echo "Setting remote to SSH for $repo..."
+            git remote set-url origin $repo_url
+        end
+        git fetch origin
+        echo "Checking out $target_branch for $repo..."
+        git checkout $target_branch || git checkout -b $target_branch
+        git pull origin $target_branch || true
+    else
+        echo "Cloning $repo into $repo_dir using SSH..."
+        git clone $repo_url $repo_dir
+        cd $repo_dir
+        git checkout $target_branch || git checkout -b $target_branch
+        git push origin $target_branch --set-upstream || true
+    end
+
+    # Handle submodules for anchor repository
+    if test "$repo" = "anchor"
+        echo "Fixing submodules for anchor..."
+        # Clean stale submodule state
+        echo "Cleaning submodule state..."
+        git submodule deinit -f --all 2>/dev/null || true
+        if test -d .git/modules
+            rm -rf .git/modules/*
+        end
+        rm -rf tests/cfo/deps examples/cfo/deps
+
+        # Ensure .gitmodules is correct
+        echo "Updating .gitmodules to use correct paths and SSH URLs..."
+        sed -i '/\[submodule "tests\/cfo\/deps\/.*"\]/,/^\[/d' .gitmodules
+        git rm -r --cached tests/cfo/deps 2>/dev/null || true
+        if ! grep -q '\[submodule "examples/cfo/deps/openbook-dex"\]' .gitmodules
+            echo "[submodule \"examples/cfo/deps/openbook-dex\"]" >> .gitmodules
+            echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
+            echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
+            echo "    branch = safe-pump-compat" >> .gitmodules
+        else
+            sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
+            sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|path = .*|path = examples/cfo/deps/openbook-dex|' .gitmodules
+            sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
+        end
+        git add .gitmodules
+        git commit -m "Remove stale tests/cfo submodules, add/update openbook-dex at examples/cfo/deps" || true
+        git push origin $target_branch || true
+
+        # Synchronizing and initializing submodules
+        echo "Synchronizing and initializing submodules..."
+        git submodule sync --recursive
+        git submodule init
+        mkdir -p examples/cfo/deps
+        git submodule update --recursive || echo "Failed to update submodules, attempting manual fix..."
+
+        # Fix openbook-dex submodule to valid commit
+        if test -d examples/cfo/deps/openbook-dex
+            cd examples/cfo/deps/openbook-dex
+            echo "Fixing openbook-dex submodule to valid commit..."
+            git fetch origin
+            git checkout c85e56deeaead43abbc33b7301058838b9c5136d
+            git branch -f safe-pump-compat c85e56deeaead43abbc33b7301058838b9c5136d
+            git checkout safe-pump-compat
+            git push origin safe-pump-compat --force || true
+            cd $repo_dir
+            git add examples/cfo/deps/openbook-dex
+            git commit -m "Pin openbook-dex submodule to valid commit c85e56deeaead43abbc33b7301058838b9c5136d" || true
+            git push origin $target_branch || true
+        else
+            echo "Error: openbook-dex submodule not found at examples/cfo/deps/openbook-dex"
+            exit 1
+        end
+    end
+
+    # Verify anchor-spl package for anchor repository
+    if test "$repo" = "anchor"
+        if test -f spl/Cargo.toml
+            echo "Verifying anchor-spl package in $repo_dir/spl/Cargo.toml..."
+            if grep -q 'name = "anchor-spl"' spl/Cargo.toml
+                echo "anchor-spl package found in $repo_dir/spl/Cargo.toml."
+            else
+                echo "Error: anchor-spl package not found in $repo_dir/spl/Cargo.toml."
+                exit 1
+            end
+        else
+            echo "Error: spl/Cargo.toml not found in $repo_dir."
+            exit 1
+        end
+    end
+end # Close the for loop for hamkj_repos
 
 # Patch dependency Cargo.toml files
 if test -d /tmp/deps/curve25519-dalek
@@ -254,7 +440,6 @@ if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
     git commit -m "Pin dependencies and remove patch.crates-io" || true
-    git push origin safe-pump-compat || true
 end
 
 if test -d /tmp/deps/token-2022/program
@@ -451,3 +636,4 @@ else
     end
     exit 1
 end
+```
