@@ -97,45 +97,47 @@ for repo in $hamkj_repos
     # Handle submodules for anchor repository
     if test "$repo" = "anchor"
         echo "Fixing submodules for anchor..."
-        # Ensure .gitmodules exists and is correct
+        # Clean stale submodule state
+        echo "Cleaning submodule state..."
+        git submodule deinit -f . 2>/dev/null || true
+        if test -d .git/modules
+            rm -rf .git/modules/*
+        end
+        if test -d examples/cfo/deps
+            rm -rf examples/cfo/deps/*
+        end
+
+        # Ensure .gitmodules is correct
         if test ! -f .gitmodules
             echo "Creating .gitmodules file..."
             echo "[submodule \"examples/cfo/deps/openbook-dex\"]" > .gitmodules
             echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
             echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
             echo "    branch = safe-pump-compat" >> .gitmodules
-            git add .gitmodules
-            git commit -m "Add openbook-dex submodule to .gitmodules" || true
-            git push origin $target_branch || true
         else
             echo "Updating .gitmodules to use correct paths and SSH URLs..."
-            sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/^\[/d' .gitmodules
-            sed -i '/\[submodule "tests\/cfo\/deps\/stake"\]/,/^\[/d' .gitmodules
-            sed -i '/\[submodule "tests\/cfo\/deps\/swap"\]/,/^\[/d' .gitmodules
+            # Remove stale submodule entries
+            sed -i '/\[submodule "tests\/cfo\/deps\/.*"\]/,/^\[/d' .gitmodules
+            # Ensure openbook-dex submodule is correctly configured
             if ! grep -q '\[submodule "examples/cfo/deps/openbook-dex"\]' .gitmodules
                 echo "[submodule \"examples/cfo/deps/openbook-dex\"]" >> .gitmodules
                 echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
                 echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
                 echo "    branch = safe-pump-compat" >> .gitmodules
             else
-                sed -i 's|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
-                sed -i 's|path = .*|path = examples/cfo/deps/openbook-dex|' .gitmodules
+                sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
+                sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|path = .*|path = examples/cfo/deps/openbook-dex|' .gitmodules
                 sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
             end
-            git add .gitmodules
-            git commit -m "Update .gitmodules to use correct submodule path and SSH URL" || true
-            git push origin $target_branch || true
         end
-
-        # Clean stale submodule state
-        echo "Cleaning submodule state..."
-        git submodule deinit -f . || true
-        rm -rf .git/modules/*
-        mkdir -p examples/cfo/deps
+        git add .gitmodules
+        git commit -m "Update .gitmodules to use correct submodule path and SSH URL" || true
+        git push origin $target_branch || true
 
         # Synchronize and initialize submodules
         echo "Synchronizing and initializing submodules..."
         git submodule sync --recursive
+        mkdir -p examples/cfo/deps
         git submodule update --init --recursive || echo "Failed to update submodules, attempting manual fix..."
 
         # Fix openbook-dex submodule to a valid commit
@@ -172,7 +174,7 @@ for repo in $hamkj_repos
             exit 1
         end
     end
-end
+end # Close the for loop for hamkj_repos
 
 # Patch dependency Cargo.toml files
 if test -d /tmp/deps/curve25519-dalek
