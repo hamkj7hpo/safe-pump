@@ -23,7 +23,7 @@ set -l branch safe-pump-compat
 set -l github_user hamkj7hpo
 set -l openbook_commit c85e56deeaead43abbc33b7301058838b9c5136d
 
-echo "setup.fish version 2.5"
+echo "setup.fish version 2.6"
 
 # Ensure git is configured
 echo "Checking git configuration..."
@@ -53,7 +53,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to fix zeroize version conflict" || true
+    git commit -m "Update setup.fish to version 2.6 to fix zeroize version conflict" || true
     git push origin main || true
 end
 
@@ -220,26 +220,46 @@ end
 if test -d /tmp/deps/zk-elgamal-proof
     echo "Patching /tmp/deps/zk-elgamal-proof/Cargo.toml..."
     cd /tmp/deps/zk-elgamal-proof
+    # Robustly replace any zeroize dependency
+    if grep -q 'zeroize =' Cargo.toml
+        sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    else
+        sed -i '/\[dependencies\]/a zeroize = "1.3.0"' Cargo.toml
+    end
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies to fix zeroize version conflict and remove patch.crates-io" || true
+    git commit -m "Pin dependencies to fix zeroize version conflict to 1.3.0 (version 2.6)" || true
     git push origin $branch || true
+    # Verify patch
+    if ! grep -q 'zeroize = "1.3.0"' Cargo.toml
+        echo "Error: Failed to patch zeroize to 1.3.0 in /tmp/deps/zk-elgamal-proof/Cargo.toml"
+        exit 1
+    end
 end
 
 if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
     echo "Patching /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml..."
     cd /tmp/deps/zk-elgamal-proof/zk-sdk
+    # Robustly replace any zeroize dependency
+    if grep -q 'zeroize =' Cargo.toml
+        sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
+    else
+        sed -i '/\[dependencies\]/a zeroize = "1.3.0"' Cargo.toml
+    end
     sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies to fix zeroize version conflict and remove patch.crates-io" || true
+    git commit -m "Pin dependencies to fix zeroize version conflict to 1.3.0 (version 2.6)" || true
     git push origin $branch || true
+    # Verify patch
+    if ! grep -q 'zeroize = "1.3.0"' Cargo.toml
+        echo "Error: Failed to patch zeroize to 1.3.0 in /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml"
+        exit 1
+    end
 end
 
 if test -d /tmp/deps/spl-pod
@@ -250,7 +270,7 @@ if test -d /tmp/deps/spl-pod
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -273,7 +293,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io" || true
+    git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -286,7 +306,7 @@ if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     # Skip pushing to openbook-dex due to permission issues
 end
 
@@ -306,7 +326,7 @@ if test -d /tmp/deps/token-2022/program
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -320,7 +340,7 @@ if test -d /tmp/deps/associated-token-account/program
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -331,7 +351,7 @@ if test -d /tmp/deps/solana-program-library
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -341,7 +361,7 @@ if test -d /tmp/deps/solana-program-library/libraries/discriminator
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -353,7 +373,7 @@ if test -d /tmp/deps/spl-type-length-value
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -366,7 +386,7 @@ if test -d /tmp/deps/token-group
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -378,7 +398,7 @@ if test -d /tmp/deps/token-metadata
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -389,7 +409,7 @@ if test -d /tmp/deps/transfer-hook
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -400,7 +420,7 @@ if test -d /tmp/deps/memo
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -412,7 +432,7 @@ if test -d /tmp/deps/raydium-cp-swap
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -425,7 +445,7 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.6)" || true
     git push origin $branch || true
 end
 
@@ -452,7 +472,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|wasm-bindgen =.*|wasm-bindgen = "=0.2.93"|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "=0.3.70"|' Cargo.toml
 git add Cargo.toml
-git commit -m "Pin dependencies to fix zeroize version conflict, remove patch.crates-io" || true
+git commit -m "Pin dependencies to fix zeroize version conflict, remove patch.crates-io (version 2.6)" || true
 git push origin main || true
 
 # Clean and build the project
@@ -475,7 +495,7 @@ else
     echo "Build failed, check output for errors."
     echo "Generating diagnostic report..."
     cargo build --verbose > /tmp/safe_pump_diagnostic_report.txt 2>&1
-    echo "Diagnostic report saved to /tmp/save_pump_diagnostic_report.txt"
+    echo "Diagnostic report saved to /tmp/safe_pump_diagnostic_report.txt"
     if command -v cargo-tree >/dev/null
         echo "Generating dependency tree for debugging..."
         cargo tree > /tmp/safe_pump_dependency_tree.txt
@@ -487,5 +507,7 @@ else
 end
 
 # Always print version at the end
-true
-echo "setup.fish version 2.5 completed"
+begin
+    true
+end
+echo "setup.fish version 2.6 completed"
