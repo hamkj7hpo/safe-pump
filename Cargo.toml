@@ -19,7 +19,7 @@ sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
 curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
 light-poseidon = "0.3.0"
-getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "master", features = ["custom"] }
+getrandom = { version = "0.2.15", features = ["custom"] }
 itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }
 lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }
 num = { git = "https://github.com/rust-num/num.git", branch = "master" }
