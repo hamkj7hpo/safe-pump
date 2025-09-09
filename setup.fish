@@ -97,26 +97,46 @@ for repo in $hamkj_repos
     # Handle submodules for anchor repository
     if test "$repo" = "anchor"
         echo "Fixing submodules for anchor..."
-        # Ensure .gitmodules is clean and correct
-        if test -f .gitmodules
-            echo "Updating .gitmodules to use correct paths and SSH URLs..."
-            sed -i 's|tests/cfo/deps/|examples/cfo/deps/|' .gitmodules
-            sed -i 's|https://github.com/openbook-dex/program|git@github.com:openbook-dex/program.git|' .gitmodules
-            sed -i 's|https://github.com/solana-labs/solana-program-library|git@github.com:hamkj7hpo/solana-program-library.git|' .gitmodules
+        # Ensure .gitmodules exists and is correct
+        if test ! -f .gitmodules
+            echo "Creating .gitmodules file..."
+            echo "[submodule \"examples/cfo/deps/openbook-dex\"]" > .gitmodules
+            echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
+            echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
+            echo "    branch = safe-pump-compat" >> .gitmodules
             git add .gitmodules
-            git commit -m "Update submodule paths and URLs to use SSH and correct paths" || true
+            git commit -m "Add openbook-dex submodule to .gitmodules" || true
+            git push origin $target_branch || true
+        else
+            echo "Updating .gitmodules to use correct paths and SSH URLs..."
+            sed -i '/\[submodule "tests\/cfo\/deps\/openbook-dex"\]/,/^\[/d' .gitmodules
+            sed -i '/\[submodule "tests\/cfo\/deps\/stake"\]/,/^\[/d' .gitmodules
+            sed -i '/\[submodule "tests\/cfo\/deps\/swap"\]/,/^\[/d' .gitmodules
+            if ! grep -q '\[submodule "examples/cfo/deps/openbook-dex"\]' .gitmodules
+                echo "[submodule \"examples/cfo/deps/openbook-dex\"]" >> .gitmodules
+                echo "    path = examples/cfo/deps/openbook-dex" >> .gitmodules
+                echo "    url = git@github.com:openbook-dex/program.git" >> .gitmodules
+                echo "    branch = safe-pump-compat" >> .gitmodules
+            else
+                sed -i 's|url = .*|url = git@github.com:openbook-dex/program.git|' .gitmodules
+                sed -i 's|path = .*|path = examples/cfo/deps/openbook-dex|' .gitmodules
+                sed -i '/\[submodule "examples\/cfo\/deps\/openbook-dex"\]/,/^\[/ s|branch = .*|branch = safe-pump-compat|' .gitmodules
+            end
+            git add .gitmodules
+            git commit -m "Update .gitmodules to use correct submodule path and SSH URL" || true
             git push origin $target_branch || true
         end
 
-        # Clean submodule state
+        # Clean stale submodule state
         echo "Cleaning submodule state..."
-        rm -rf .git/modules/examples/cfo/deps/*
-        rm -rf examples/cfo/deps/*
-        git submodule sync --recursive
+        git submodule deinit -f . || true
+        rm -rf .git/modules/*
+        mkdir -p examples/cfo/deps
 
-        # Initialize and update submodules
-        echo "Initializing and updating submodules..."
-        git submodule update --init --recursive || echo "Failed to update submodules for anchor, attempting manual fix..."
+        # Synchronize and initialize submodules
+        echo "Synchronizing and initializing submodules..."
+        git submodule sync --recursive
+        git submodule update --init --recursive || echo "Failed to update submodules, attempting manual fix..."
 
         # Fix openbook-dex submodule to a valid commit
         if test -d examples/cfo/deps/openbook-dex
