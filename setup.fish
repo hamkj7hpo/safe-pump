@@ -97,12 +97,10 @@ for repo in $hamkj_repos
     # Handle submodules for anchor repository
     if test "$repo" = "anchor"
         echo "Fixing submodules for anchor..."
-        # Update .gitmodules to correct paths and URLs
+        # Ensure .gitmodules is clean and correct
         if test -f .gitmodules
             echo "Updating .gitmodules to use correct paths and SSH URLs..."
-            sed -i 's|tests/cfo/deps/openbook-dex|examples/cfo/deps/openbook-dex|' .gitmodules
-            sed -i 's|tests/cfo/deps/stake|examples/cfo/deps/stake|' .gitmodules
-            sed -i 's|tests/cfo/deps/swap|examples/cfo/deps/swap|' .gitmodules
+            sed -i 's|tests/cfo/deps/|examples/cfo/deps/|' .gitmodules
             sed -i 's|https://github.com/openbook-dex/program|git@github.com:openbook-dex/program.git|' .gitmodules
             sed -i 's|https://github.com/solana-labs/solana-program-library|git@github.com:hamkj7hpo/solana-program-library.git|' .gitmodules
             git add .gitmodules
@@ -110,9 +108,15 @@ for repo in $hamkj_repos
             git push origin $target_branch || true
         end
 
+        # Clean submodule state
+        echo "Cleaning submodule state..."
+        rm -rf .git/modules/examples/cfo/deps/*
+        rm -rf examples/cfo/deps/*
+        git submodule sync --recursive
+
         # Initialize and update submodules
-        git submodule sync
-        git submodule update --init --recursive || echo "Failed to update submodules for $repo, continuing..."
+        echo "Initializing and updating submodules..."
+        git submodule update --init --recursive || echo "Failed to update submodules for anchor, attempting manual fix..."
 
         # Fix openbook-dex submodule to a valid commit
         if test -d examples/cfo/deps/openbook-dex
@@ -127,6 +131,9 @@ for repo in $hamkj_repos
             git add examples/cfo/deps/openbook-dex
             git commit -m "Pin openbook-dex submodule to valid commit c85e56deeaead43abbc33b7301058838b9c5136d" || true
             git push origin $target_branch || true
+        else
+            echo "Error: openbook-dex submodule not found at examples/cfo/deps/openbook-dex"
+            exit 1
         end
     end
 
