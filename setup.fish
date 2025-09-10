@@ -23,7 +23,7 @@ set -l branch safe-pump-compat
 set -l github_user hamkj7hpo
 set -l openbook_commit c85e56deeaead43abbc33b7301058838b9c5136d
 
-echo "setup.fish version 2.8"
+echo "setup.fish version 2.9"
 
 # Ensure git is configured
 echo "Checking git configuration..."
@@ -53,7 +53,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to version 2.8 to fix zeroize version conflict" || true
+    git commit -m "Update setup.fish to version 2.9 to fix zeroize version conflict" || true
     git push origin main || true
 end
 
@@ -241,7 +241,7 @@ if test -d /tmp/deps/zk-elgamal-proof
     echo "Current solana-zk-sdk in /tmp/deps/zk-elgamal-proof/Cargo.toml:"
     grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
     git add Cargo.toml
-    git commit -m "Force pin zeroize to 1.3.0, update dependencies (version 2.8)" || true
+    git commit -m "Force pin zeroize to 1.3.0, update dependencies (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -265,7 +265,7 @@ if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
         exit 1
     end
     git add Cargo.toml
-    git commit -m "Force pin zeroize to 1.3.0, update dependencies (version 2.8)" || true
+    git commit -m "Force pin zeroize to 1.3.0, update dependencies (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -280,7 +280,7 @@ if test -d /tmp/deps/spl-pod
     echo "Current solana-zk-sdk in /tmp/deps/spl-pod/Cargo.toml:"
     grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -303,7 +303,7 @@ if test -d /tmp/deps/anchor/spl
     sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io (version 2.8)" || true
+    git commit -m "Fix optional dependencies, pin openbook-dex to valid commit, disable dex feature, remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -316,7 +316,7 @@ if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     # Skip pushing to openbook-dex due to permission issues
 end
 
@@ -339,7 +339,7 @@ if test -d /tmp/deps/token-2022/program
     echo "Current solana-zk-sdk in /tmp/deps/token-2022/program/Cargo.toml:"
     grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -353,7 +353,7 @@ if test -d /tmp/deps/associated-token-account/program
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -364,7 +364,7 @@ if test -d /tmp/deps/solana-program-library
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -374,7 +374,7 @@ if test -d /tmp/deps/solana-program-library/libraries/discriminator
     sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -389,7 +389,7 @@ if test -d /tmp/deps/spl-type-length-value
     echo "Current solana-zk-sdk in /tmp/deps/spl-type-length-value/Cargo.toml:"
     grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -402,7 +402,7 @@ if test -d /tmp/deps/token-group
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -414,7 +414,7 @@ if test -d /tmp/deps/token-metadata
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -425,7 +425,7 @@ if test -d /tmp/deps/transfer-hook
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -436,7 +436,7 @@ if test -d /tmp/deps/memo
     sed -i 's|zeroize =.*|zeroize = "1.3.0"|' Cargo.toml
     sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -451,7 +451,7 @@ if test -d /tmp/deps/raydium-cp-swap
     echo "Current solana-zk-sdk in /tmp/deps/raydium-cp-swap/Cargo.toml:"
     grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -467,7 +467,7 @@ if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
     echo "Current solana-zk-sdk in /tmp/deps/raydium-cp-swap/programs/cp-swap/Cargo.toml:"
     grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
     git add Cargo.toml
-    git commit -m "Pin dependencies and remove patch.crates-io (version 2.8)" || true
+    git commit -m "Pin dependencies and remove patch.crates-io (version 2.9)" || true
     git push origin $branch || true
 end
 
@@ -477,9 +477,10 @@ cd $project_dir
 sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
 # Add [patch.crates-io] to force zeroize version
 if ! grep -q '\[patch.crates-io\]' Cargo.toml
-    echo -e "\n[patch.crates-io]\nzeroize = { version = \"1.3.0\" }" >> Cargo.toml
+    echo -e "\n[patch.crates-io]\nzeroize = { version = \"=1.3.0\" }" >> Cargo.toml
 else
-    sed -i '/\[patch.crates-io\]/a zeroize = { version = "1.3.0" }' Cargo.toml
+    sed -i '/zeroize =.*$/d' Cargo.toml
+    sed -i '/\[patch.crates-io\]/a zeroize = { version = "=1.3.0" }' Cargo.toml
 end
 sed -i '/\[dependencies\]/,/^\[/ s|anchor-lang =.*|anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang", features = ["init-if-needed"] }|' Cargo.toml
 sed -i '/\[dependencies\]/,/^\[/ s|anchor-spl =.*|anchor-spl = { path = "/tmp/deps/anchor/spl", default-features = false }|' Cargo.toml
@@ -503,11 +504,21 @@ sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "=0.3.70"|' Cargo.toml
 echo "Current solana-zk-sdk in $project_dir/Cargo.toml:"
 grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
 git add Cargo.toml
-git commit -m "Pin dependencies to fix zeroize version conflict, add patch.crates-io for zeroize (version 2.8)" || true
+git commit -m "Pin dependencies to fix zeroize version conflict, add patch.crates-io for zeroize (version 2.9)" || true
 git push origin main || true
 
+# Verify zeroize usage across all dependencies
+echo "Verifying zeroize versions across all Cargo.toml files..."
+grep -r 'zeroize' $tmp_dir/*/Cargo.toml $tmp_dir/*/*/Cargo.toml $project_dir/Cargo.toml > /tmp/zeroize_versions.txt || true
+if grep -v 'zeroize = "1.3.0"' /tmp/zeroize_versions.txt | grep -v 'zeroize = { version = "=1.3.0" }' | grep -q 'zeroize'
+    echo "Warning: Found unexpected zeroize versions:"
+    grep -v 'zeroize = "1.3.0"' /tmp/zeroize_versions.txt | grep -v 'zeroize = { version = "=1.3.0" }'
+    echo "Please review /tmp/zeroize_versions.txt for details."
+end
+
 # Clean and build the project
-echo "Cleaning and building project..."
+echo "Cleaning and buildi
+ng project..."
 cd $project_dir
 cargo clean
 rm -f Cargo.lock
@@ -541,4 +552,4 @@ end
 begin
     true
 end
-echo "setup.fish version 2.8 completed"
+echo "setup.fish version 2.9 completed"
