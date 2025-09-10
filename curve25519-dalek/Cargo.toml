@@ -67,7 +67,7 @@ subtle = { version = "2.6.0", default-features = false, features = [
 serde = { version = "1.0", default-features = false, optional = true, features = [
     "derive",
 ] }
-zeroize = { version = "1", default-features = false, optional = true }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", package = "zeroize" }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 cpufeatures = "0.2.17"
