@@ -67,3 +67,6 @@ overflow-checks = true
 
 
 
+
+[patch.crates-io]
+zeroize = { version = "1.3.0" }
