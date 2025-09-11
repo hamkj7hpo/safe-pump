@@ -91,4 +91,4 @@ pkcs8 = ["ed25519/pkcs8"]
 pem = ["alloc", "ed25519/pem", "pkcs8"]
 rand_core = ["dep:rand_core"]
 serde = ["dep:serde", "ed25519/serde"]
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", package = "zeroize" }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", package = "zeroize", version = "1.3.0" }
