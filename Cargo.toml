@@ -17,7 +17,7 @@ zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-
 rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }
 sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
+curve25519-dalek = { path = "/tmp/deps/curve25519-dalek", features = ["std", "serde"] }
 light-poseidon = "0.3.0"
 getrandom = { version = "0.2.15", features = ["custom"] }
 itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }
@@ -56,7 +56,7 @@ anchor-spl = { path = "/tmp/deps/anchor/spl", default-features = false }
 raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }
 
 # zk-SDK
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
+solana-zk-sdk = { path = "/tmp/deps/zk-elgamal-proof", package = "solana-zk-sdk" }
 
 [features]
 cpi = []
