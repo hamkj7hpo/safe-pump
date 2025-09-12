@@ -19,7 +19,7 @@ set -l hamkj_repos \
     "utils" \
     "formats"
 
-# Additional repositories with zeroize dependencies
+# Additional repositories with potential zeroize dependencies
 set -l additional_repos \
     "aes-gcm-siv" \
     "elliptic-curves" \
@@ -56,7 +56,7 @@ set -l openbook_commit c85e56deeaead43abbc33b7301058838b9c5136d
 set -l zeroize_fork https://github.com/$github_user/utils.git
 set -l zeroize_branch safe-pump-compat
 
-echo "setup.fish version 3.4"
+echo "setup.fish version 3.5"
 
 # Ensure git is configured
 echo "Checking git configuration..."
@@ -86,7 +86,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to version 3.4 to fix curve25519-dalek branch and zeroize patching" || true
+    git commit -m "Update setup.fish to version 3.5 to fix curve25519-dalek TOML syntax and zeroize in solana-zk-sdk" || true
     git push origin main || true
 end
 
@@ -143,6 +143,51 @@ for repo in $hamkj_repos
         else
             echo "Error: zeroize/Cargo.toml not found in $repo_dir/zeroize."
             exit 1
+        end
+    end
+
+    # Fix TOML syntax in curve25519-dalek sub-crates
+    if test "$repo" = "curve25519-dalek"
+        for subcrate in ed25519-dalek x25519-dalek
+            if test -f $subcrate/Cargo.toml
+                echo "Fixing TOML syntax in $repo_dir/$subcrate/Cargo.toml..."
+                # Ensure authors is a sequence, not a map
+                if grep -q 'authors = { git' $subcrate/Cargo.toml
+                    sed -i '/authors = { git/d' $subcrate/Cargo.toml
+                    sed -i '/\[package\]/a authors = ["Isis Lovecruft <isis@patternsinthevoid.net>", "Henry de Valence <hdevalence@hdevalence.ca>"]' $subcrate/Cargo.toml
+                    git add $subcrate/Cargo.toml
+                    git commit -m "Fix authors field to sequence in $subcrate (version 3.5)" || true
+                end
+                # Ensure other sequence fields are correct (e.g., keywords, categories)
+                if grep -q 'keywords = { git' $subcrate/Cargo.toml
+                    sed -i '/keywords = { git/d' $subcrate/Cargo.toml
+                    sed -i '/\[package\]/a keywords = ["cryptography", "crypto", "curve25519", "ed25519"]' $subcrate/Cargo.toml
+                    git add $subcrate/Cargo.toml
+                    git commit -m "Fix keywords field to sequence in $subcrate (version 3.5)" || true
+                end
+                if grep -q 'categories = { git' $subcrate/Cargo.toml
+                    sed -i '/categories = { git/d' $subcrate/Cargo.toml
+                    sed -i '/\[package\]/a categories = ["cryptography", "no-std"]' $subcrate/Cargo.toml
+                    git add $subcrate/Cargo.toml
+                    git commit -m "Fix categories field to sequence in $subcrate (version 3.5)" || true
+                end
+                git push origin $target_branch || true
+            end
+        end
+    end
+
+    # Patch solana-zk-sdk to use zeroize v1.3.0
+    if test "$repo" = "zk-elgamal-proof"
+        for cargo_file in (find . -name Cargo.toml | grep solana-zk-sdk)
+            if test -f $cargo_file
+                echo "Patching $cargo_file for zeroize..."
+                sed -i '/\[dependencies.zeroize\]/,/^\[/d' $cargo_file
+                sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
+                sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
+                git add $cargo_file
+                git commit -m "Pin zeroize to utils fork in solana-zk-sdk (version 3.5)" || true
+                git push origin $target_branch || true
+            end
         end
     end
 
@@ -271,7 +316,7 @@ end
 if test -d /tmp/deps/curve25519-dalek
     echo "Patching /tmp/deps/curve25519-dalek/Cargo.toml..."
     cd /tmp/deps/curve25519-dalek
-    sed -i '/\[features\]/,/^\[/{d}' Cargo.toml
+    sed -i '/\[features\]/,/^\[/d' Cargo.toml
     for subcrate in curve25519-dalek ed25519-dalek x25519-dalek
         if test -f $subcrate/Cargo.toml
             echo "Patching /tmp/deps/curve25519-dalek/$subcrate/Cargo.toml for zeroize..."
@@ -282,7 +327,7 @@ if test -d /tmp/deps/curve25519-dalek
                 sed -i '/\[features\]/a std = ["alloc", "rand_core/std"]' $subcrate/Cargo.toml
             end
             git add $subcrate/Cargo.toml
-            git commit -m "Pin zeroize to utils fork in $subcrate, ensure std feature (version 3.4)" || true
+            git commit -m "Pin zeroize to utils fork in $subcrate, ensure std feature (version 3.5)" || true
             git push origin safe-pump-compat-v2 || true
         end
     end
@@ -293,7 +338,7 @@ if test -d /tmp/deps/solana
     cd /tmp/deps/solana
     sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0", default-features = false }|' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork in solana (version 3.4)" || true
+    git commit -m "Pin zeroize to utils fork in solana (version 3.5)" || true
     git push origin $branch || true
 end
 
@@ -306,7 +351,7 @@ if test -d /tmp/deps/elliptic-curves
         sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
         sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
         git add $cargo_file
-        git commit -m "Pin zeroize to utils fork in $cargo_file (version 3.4)" || true
+        git commit -m "Pin zeroize to utils fork in $cargo_file (version 3.5)" || true
     end
 end
 
@@ -323,7 +368,7 @@ for repo in $hamkj_repos $additional_repos
             sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
             sed -i 's|zeroize = \["dep:zeroize"\]|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
             git add $cargo_file
-            git commit -m "Pin zeroize to utils fork in $repo (version 3.4)" || true
+            git commit -m "Pin zeroize to utils fork in $repo (version 3.5)" || true
             if test "$repo" = "formats"
                 git push origin master || true
             end
@@ -356,7 +401,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "=0.3.70"|' Cargo.toml
 echo "Current solana-zk-sdk in $project_dir/Cargo.toml:"
 grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
 git add Cargo.toml
-git commit -m "Pin zeroize to utils fork, update dependencies (version 3.4)" || true
+git commit -m "Pin zeroize to utils fork, update dependencies (version 3.5)" || true
 git push origin main || true
 
 # Verify zeroize usage across all dependencies
@@ -399,4 +444,4 @@ else
     exit 1
 end
 
-echo "setup.fish version 3.4 completed"
+echo "setup.fish version 3.5 completed"
