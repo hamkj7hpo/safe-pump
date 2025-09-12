@@ -56,7 +56,7 @@ set -l openbook_commit c85e56deeaead43abbc33b7301058838b9c5136d
 set -l zeroize_fork https://github.com/$github_user/utils.git
 set -l zeroize_branch safe-pump-compat
 
-echo "setup.fish version 3.3"
+echo "setup.fish version 3.4"
 
 # Ensure git is configured
 echo "Checking git configuration..."
@@ -86,7 +86,7 @@ end
 if git status --porcelain | grep -q "setup.fish"
     echo "Committing changes to setup.fish..."
     git add setup.fish
-    git commit -m "Update setup.fish to version 3.3 to fix repo URLs and permissions" || true
+    git commit -m "Update setup.fish to version 3.4 to fix curve25519-dalek branch and zeroize patching" || true
     git push origin main || true
 end
 
@@ -120,13 +120,13 @@ for repo in $hamkj_repos
         end
         git fetch origin
         echo "Checking out $target_branch for $repo..."
-        git checkout $target_branch || git checkout -b $target_branch
+        git checkout $target_branch || git checkout -b $target_branch origin/$target_branch || git checkout -b $target_branch
         git pull origin $target_branch || true
     else
         echo "Cloning $repo into $repo_dir using SSH..."
         git clone $repo_url $repo_dir
         cd $repo_dir
-        git checkout $target_branch || git checkout -b $target_branch
+        git checkout $target_branch || git checkout -b $target_branch origin/$target_branch || git checkout -b $target_branch
         git push origin $target_branch --set-upstream || true
     end
 
@@ -244,7 +244,7 @@ for repo in $additional_repos
                      test "$repo" = "thiserror" && echo "https://github.com/dtolnay/thiserror.git" || \
                      test "$repo" = "uint" && echo "https://github.com/paritytech/parity-common.git" || \
                      test "$repo" = "wasm-bindgen" && echo "https://github.com/rustwasm/wasm-bindgen.git")
-    set -l target_branch (test "$repo" = "aes-gcm-siv" -o "$repo" = "elliptic-curves" -o "$repo" = "sha3" -o "$repo" = "signatures" -o "$repo" = "tiny-bip39" -o "$repo" = "thiserror" -o "$repo" = "uint" && echo "master" || echo "main")
+    set -l target_branch (test "$repo" = "aes-gcm-siv" -o "$repo" = "elliptic-curves" -o "$repo" = "sha3" -o "$repo" = "signatures" -o "$repo" = "tiny-bip39" -o "$repo" = "thiserror" -o "$repo" = "uint" -o "$repo" = "merlin" -o "$repo" = "arrayref" -o "$repo" = "base64" -o "$repo" = "bincode" -o "$repo" = "borsh" -o "$repo" = "getrandom" -o "$repo" = "itertools" -o "$repo" = "lazy_static" -o "$repo" = "num" && echo "master" || echo "main")
 
     echo "Processing $repo into $repo_dir..."
     if test -d $repo_dir
@@ -256,14 +256,14 @@ for repo in $additional_repos
             echo "Stashing local changes in $repo..."
             git stash
         end
-        git checkout $target_branch || git checkout -b $target_branch
+        git checkout $target_branch || git checkout -b $target_branch origin/$target_branch || git checkout -b $target_branch
         git pull origin $target_branch || true
         git stash pop 2>/dev/null || true
     else
         echo "Cloning $repo into $repo_dir..."
         git clone $repo_url $repo_dir
         cd $repo_dir
-        git checkout $target_branch || git checkout -b $target_branch
+        git checkout $target_branch || git checkout -b $target_branch origin/$target_branch || git checkout -b $target_branch
     end
 end
 
@@ -272,295 +272,60 @@ if test -d /tmp/deps/curve25519-dalek
     echo "Patching /tmp/deps/curve25519-dalek/Cargo.toml..."
     cd /tmp/deps/curve25519-dalek
     sed -i '/\[features\]/,/^\[/{d}' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Remove invalid [features] section from workspace Cargo.toml" || true
-    git push origin safe-pump-compat-v2 || true
     for subcrate in curve25519-dalek ed25519-dalek x25519-dalek
         if test -f $subcrate/Cargo.toml
             echo "Patching /tmp/deps/curve25519-dalek/$subcrate/Cargo.toml for zeroize..."
             sed -i 's|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", package = "zeroize".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $subcrate/Cargo.toml
-            sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $subcrate/Cargo.toml
+            sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0", optional = true }|' $subcrate/Cargo.toml
+            sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0", optional = true }|' $subcrate/Cargo.toml
             if ! grep -q 'std = \["alloc", "rand_core/std"\]' $subcrate/Cargo.toml
                 sed -i '/\[features\]/a std = ["alloc", "rand_core/std"]' $subcrate/Cargo.toml
             end
             git add $subcrate/Cargo.toml
-            git commit -m "Pin zeroize to utils fork in $subcrate, ensure std feature (version 3.3)" || true
+            git commit -m "Pin zeroize to utils fork in $subcrate, ensure std feature (version 3.4)" || true
             git push origin safe-pump-compat-v2 || true
         end
     end
 end
 
-if test -d /tmp/deps/solana/sdk/program
-    echo "Patching /tmp/deps/solana/sdk/program/Cargo.toml..."
-    cd /tmp/deps/solana/sdk/program
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
+if test -d /tmp/deps/solana
+    echo "Patching /tmp/deps/solana/Cargo.toml..."
+    cd /tmp/deps/solana
+    sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0", default-features = false }|' Cargo.toml
     git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
+    git commit -m "Pin zeroize to utils fork in solana (version 3.4)" || true
     git push origin $branch || true
 end
 
-if test -d /tmp/deps/zk-elgamal-proof
-    echo "Patching /tmp/deps/zk-elgamal-proof/Cargo.toml..."
-    cd /tmp/deps/zk-elgamal-proof
-    echo "Current zeroize in /tmp/deps/zk-elgamal-proof/Cargo.toml:"
-    grep 'zeroize' Cargo.toml || echo "No zeroize dependency found"
-    sed -i '/zeroize =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }' Cargo.toml
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
-    sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Verifying zeroize patch in /tmp/deps/zk-elgamal-proof/Cargo.toml:"
-    grep 'zeroize' Cargo.toml || echo "Error: zeroize not found after patching"
-    if ! grep -q "zeroize = { git = \"$zeroize_fork\", branch = \"$zeroize_branch\", version = \"1.3.0\" }" Cargo.toml
-        echo "Error: Failed to patch zeroize to utils fork in /tmp/deps/zk-elgamal-proof/Cargo.toml"
-        exit 1
+if test -d /tmp/deps/elliptic-curves
+    echo "Patching /tmp/deps/elliptic-curves/*/Cargo.toml..."
+    cd /tmp/deps/elliptic-curves
+    for cargo_file in (find . -name Cargo.toml)
+        sed -i '/\[dependencies.zeroize\]/,/^\[/d' $cargo_file
+        sed -i 's|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", package = "zeroize".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
+        sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
+        sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
+        git add $cargo_file
+        git commit -m "Pin zeroize to utils fork in $cargo_file (version 3.4)" || true
     end
-    echo "Current solana-zk-sdk in /tmp/deps/zk-elgamal-proof/Cargo.toml:"
-    grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
 end
 
-if test -d /tmp/deps/zk-elgamal-proof/zk-sdk
-    echo "Patching /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml..."
-    cd /tmp/deps/zk-elgamal-proof/zk-sdk
-    echo "Current zeroize in /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml:"
-    grep 'zeroize' Cargo.toml || echo "No zeroize dependency found"
-    sed -i '/zeroize =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }|' Cargo.toml
-    sed -i 's|getrandom =.*|getrandom = { version = "0.2.15", features = ["custom"] }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Verifying zeroize patch in /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml:"
-    grep 'zeroize' Cargo.toml || echo "Error: zeroize not found after patching"
-    if ! grep -q "zeroize = { git = \"$zeroize_fork\", branch = \"$zeroize_branch\", version = \"1.3.0\" }" Cargo.toml
-        echo "Error: Failed to patch zeroize to utils fork in /tmp/deps/zk-elgamal-proof/zk-sdk/Cargo.toml"
-        exit 1
-    end
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/spl-pod
-    echo "Patching /tmp/deps/spl-pod/Cargo.toml..."
-    cd /tmp/deps/spl-pod
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Current solana-zk-sdk in /tmp/deps/spl-pod/Cargo.toml:"
-    grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/anchor/spl
-    echo "Patching /tmp/deps/anchor/spl/Cargo.toml..."
-    cd /tmp/deps/anchor/spl
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|openbook-dex =.*|openbook-dex = { git = "https://github.com/openbook-dex/program.git", rev = "c85e56deeaead43abbc33b7301058838b9c5136d", optional = true, features = ["no-entrypoint"] }|' Cargo.toml
-    sed -i '/spl-token-2022 =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", optional = true }' Cargo.toml
-    sed -i '/spl-associated-token-account =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account", optional = true }' Cargo.toml
-    sed -i '/spl-token-group-interface =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface", optional = true }' Cargo.toml
-    sed -i '/spl-transfer-hook-interface =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface", optional = true }' Cargo.toml
-    sed -i '/spl-memo =/d' Cargo.toml
-    sed -i '/\[dependencies\]/a spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0", optional = true }' Cargo.toml
-    sed -i 's|anchor-lang =.*|anchor-lang = { path = "../lang", version = "0.31.1" }|' Cargo.toml
-    sed -i 's|default = \["token", "associated-token", "dex"\]|default = ["token", "associated-token"]|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin dependencies, remove dex feature, remove patch.crates-io (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
-    echo "Patching /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex/Cargo.toml..."
-    cd /tmp/deps/anchor/examples/cfo/deps/openbook-dex/dex
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
-    sed -i 's|curve25519-dalek =.*|curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    # Skip pushing to openbook-dex due to permission issues
-end
-
-if test -d /tmp/deps/token-2022/program
-    echo "Patching /tmp/deps/token-2022/program/Cargo.toml..."
-    cd /tmp/deps/token-2022/program
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
-    sed -i 's|spl-memo =.*|spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }|' Cargo.toml
-    sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat", default-features = false }|' Cargo.toml
-    sed -i 's|spl-token-group-interface =.*|spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }|' Cargo.toml
-    sed -i 's|spl-token-metadata-interface =.*|spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }|' Cargo.toml
-    sed -i 's|spl-transfer-hook-interface =.*|spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }|' Cargo.toml
-    sed -i 's|spl-type-length-value =.*|spl-type-length-value = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-type-length-value" }|' Cargo.toml
-    sed -i 's|spl-tlv-account-resolution =.*|spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Current solana-zk-sdk in /tmp/deps/token-2022/program/Cargo.toml:"
-    grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/associated-token-account/program
-    echo "Patching /tmp/deps/associated-token-account/program/Cargo.toml..."
-    cd /tmp/deps/associated-token-account/program
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-token =.*|spl-token = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-token", features = ["no-entrypoint"] }|' Cargo.toml
-    sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
-    sed -i 's|spl-program-error =.*|spl-program-error = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-program-error" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/solana-program-library
-    echo "Patching /tmp/deps/solana-program-library/Cargo.toml..."
-    cd /tmp/deps/solana-program-library
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/solana-program-library/libraries/discriminator
-    echo "Patching /tmp/deps/solana-program-library/libraries/discriminator/Cargo.toml..."
-    cd /tmp/deps/solana-program-library/libraries/discriminator
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin dependencies, remove patch.crates-io (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/spl-type-length-value
-    echo "Patching /tmp/deps/spl-type-length-value/Cargo.toml..."
-    cd /tmp/deps/spl-type-length-value
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Current solana-zk-sdk in /tmp/deps/spl-type-length-value/Cargo.toml:"
-    grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/token-group
-    echo "Patching /tmp/deps/token-group/Cargo.toml..."
-    cd /tmp/deps/token-group
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-discriminator =.*|spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/token-metadata
-    echo "Patching /tmp/deps/token-metadata/Cargo.toml..."
-    cd /tmp/deps/token-metadata
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|spl-pod =.*|spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/transfer-hook
-    echo "Patching /tmp/deps/transfer-hook/Cargo.toml..."
-    cd /tmp/deps/transfer-hook
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/memo
-    echo "Patching /tmp/deps/memo/Cargo.toml..."
-    cd /tmp/deps/memo
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/raydium-cp-swap
-    echo "Patching /tmp/deps/raydium-cp-swap/Cargo.toml..."
-    cd /tmp/deps/raydium-cp-swap
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Current solana-zk-sdk in /tmp/deps/raydium-cp-swap/Cargo.toml:"
-    grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-if test -d /tmp/deps/raydium-cp-swap/programs/cp-swap
-    echo "Patching /tmp/deps/raydium-cp-swap/programs/cp-swap/Cargo.toml..."
-    cd /tmp/deps/raydium-cp-swap/programs/cp-swap
-    sed -i 's|solana-program =.*|solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }|' Cargo.toml
-    sed -i 's|solana-zk-sdk =.*|solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }|' Cargo.toml
-    sed -i 's|spl-token-2022 =.*|spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }|' Cargo.toml
-    sed -i 's|zeroize =.*|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^\[/d' Cargo.toml
-    echo "Current solana-zk-sdk in /tmp/deps/raydium-cp-swap/programs/cp-swap/Cargo.toml:"
-    grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
-    git add Cargo.toml
-    git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
-    git push origin $branch || true
-end
-
-# Patch additional repositories (without pushing to non-hamkj7hpo repos)
-for repo in $additional_repos
+# Patch other dependency Cargo.toml files
+for repo in $hamkj_repos $additional_repos
     set -l repo_dir $tmp_dir/$repo
-    set -l target_branch (test "$repo" = "aes-gcm-siv" -o "$repo" = "elliptic-curves" -o "$repo" = "sha3" -o "$repo" = "signatures" -o "$repo" = "tiny-bip39" -o "$repo" = "thiserror" -o "$repo" = "uint" && echo "master" || echo "main")
     if test -d $repo_dir
         cd $repo_dir
         for cargo_file in (find . -name Cargo.toml)
             echo "Patching $cargo_file for zeroize..."
+            sed -i '/\[dependencies.zeroize\]/,/^\[/d' $cargo_file
             sed -i 's|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", package = "zeroize".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
+            sed -i 's|zeroize = { version = "[0-9.]*".*}|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
             sed -i 's|zeroize = "[0-9.]*"|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
-            sed -i 's|zeroize = \[".*"\]|zeroize = ["dep:zeroize"]|' $cargo_file
-            sed -i '/\[dependencies.zeroize\]/,/^\[/ s|version =.*|git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0"|' $cargo_file
+            sed -i 's|zeroize = \["dep:zeroize"\]|zeroize = { git = "'$zeroize_fork'", branch = "'$zeroize_branch'", version = "1.3.0" }|' $cargo_file
             git add $cargo_file
-            git commit -m "Pin zeroize to utils fork in $repo (version 3.3)" || true
-            # Only push to hamkj7hpo/formats
+            git commit -m "Pin zeroize to utils fork in $repo (version 3.4)" || true
             if test "$repo" = "formats"
-                git push origin $target_branch || true
+                git push origin master || true
             end
         end
     end
@@ -591,7 +356,7 @@ sed -i '/\[dependencies\]/,/^\[/ s|js-sys =.*|js-sys = "=0.3.70"|' Cargo.toml
 echo "Current solana-zk-sdk in $project_dir/Cargo.toml:"
 grep 'solana-zk-sdk' Cargo.toml || echo "No solana-zk-sdk dependency found"
 git add Cargo.toml
-git commit -m "Pin zeroize to utils fork, update dependencies (version 3.3)" || true
+git commit -m "Pin zeroize to utils fork, update dependencies (version 3.4)" || true
 git push origin main || true
 
 # Verify zeroize usage across all dependencies
@@ -634,4 +399,4 @@ else
     exit 1
 end
 
-echo "setup.fish version 3.3 completed"
+echo "setup.fish version 3.4 completed"
