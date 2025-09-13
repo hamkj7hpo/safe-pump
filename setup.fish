@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.17"
+echo "setup.fish version 3.22"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -29,15 +29,19 @@ function resolve_rebase_conflicts
         inspect_file $conflicted_file
         cp $conflicted_file $conflicted_file.bak
         sed -i '/zeroize/ s/.*/zeroize = { git = "https:\/\/github.com\/hamkj7hpo\/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }/' $conflicted_file
+        # Remove duplicate zeroize in [features]
+        sed -i '/^\s*zeroize\s*=/d' $conflicted_file
         inspect_file $conflicted_file
         git add $conflicted_file
         git rebase --continue
         if test $status -ne 0
             echo "Failed to continue rebase in $repo_dir, aborting"
             git rebase --abort
+            rm -f $conflicted_file.bak
             cd $ORIGINAL_PWD
             exit 1
         end
+        rm -f $conflicted_file.bak
     else
         echo "No rebase in progress in $repo_dir"
     end
@@ -48,16 +52,31 @@ end
 function fix_zeroize_dependency
     set repo_dir $argv[1]
     set cargo_toml $argv[2]
+    set zeroize_source $argv[3]
 
     echo "Fixing zeroize dependency in $repo_dir/$cargo_toml"
     cd $repo_dir
     if test -f $cargo_toml
         inspect_file $cargo_toml
         cp $cargo_toml $cargo_toml.bak
-        sed -i '/zeroize/ s/.*/zeroize = { git = "https:\/\/github.com\/hamkj7hpo\/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }/' $cargo_toml
+        # Replace or add zeroize in [dependencies]
+        if grep -q '^zeroize\s*=' $cargo_toml
+            sed -i "s/^zeroize\s*=.*/$zeroize_source/" $cargo_toml
+        else
+            sed -i "/^\[dependencies\]/a $zeroize_source" $cargo_toml
+        end
+        # Remove package = "zeroize" if present
+        sed -i 's/, package = "zeroize"//g' $cargo_toml
+        # Remove duplicate zeroize in [features]
+        sed -i '/^\s*zeroize\s*=/d' $cargo_toml
+        # Add zeroize to [features] as a sequence if needed and [features] exists
+        if grep -q '^\[features\]' $cargo_toml && not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' $cargo_toml
+            sed -i '/^\[features\]/a zeroize = ["dep:zeroize"]' $cargo_toml
+        end
         inspect_file $cargo_toml
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.17)" --no-verify
+        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.22)" --no-verify
+        rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
     end
@@ -110,7 +129,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.17 to fix branch creation, TOML, and zeroize issues" --no-verify
+git commit -m "Update setup.fish to version 3.22 to fix syntax error, TOML, and zeroize issues" --no-verify
 
 # Validate utils repository
 echo "Validating utils repository for zeroize..."
@@ -127,7 +146,7 @@ if not test -d utils
             inspect_file zeroize/Cargo.toml
             set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
         else
-            echo "Warning: zeroize crate not found in utils repository"
+            echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
             set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
         end
         cd $ORIGINAL_PWD
@@ -140,7 +159,7 @@ else
         inspect_file zeroize/Cargo.toml
         set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
     else
-        echo "Warning: zeroize crate not found in utils repository"
+        echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
         set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
     end
     cd $ORIGINAL_PWD
@@ -181,7 +200,7 @@ if test $status -ne 0
     end
 end
 git push --force
-fix_zeroize_dependency /tmp/deps/solana sdk/program/Cargo.toml
+fix_zeroize_dependency /tmp/deps/solana sdk/program/Cargo.toml $zeroize_source
 
 # Process curve25519-dalek
 echo "Processing curve25519-dalek into /tmp/deps/curve25519-dalek..."
@@ -197,9 +216,17 @@ if test $status -ne 0
 end
 cd curve25519-dalek
 git checkout safe-pump-compat-v2 2>/dev/null || git checkout -b safe-pump-compat-v2
-fix_zeroize_dependency /tmp/deps/curve25519-dalek curve25519-dalek/Cargo.toml
-fix_zeroize_dependency /tmp/deps/curve25519-dalek ed25519-dalek/Cargo.toml
-fix_zeroize_dependency /tmp/deps/curve25519-dalek x25519-dalek/Cargo.toml
+fix_zeroize_dependency /tmp/deps/curve25519-dalek curve25519-dalek/Cargo.toml $zeroize_source
+fix_zeroize_dependency /tmp/deps/curve25519-dalek ed25519-dalek/Cargo.toml $zeroize_source
+fix_zeroize_dependency /tmp/deps/curve25519-dalek x25519-dalek/Cargo.toml $zeroize_source
+# Fix cached Cargo.toml files
+set cached_dir /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-4e97d8327ec85729/3adcba0
+if test -d $cached_dir
+    echo "Fixing cached curve25519-dalek Cargo.toml files..."
+    fix_zeroize_dependency $cached_dir ed25519-dalek/Cargo.toml $zeroize_source
+    fix_zeroize_dependency $cached_dir x25519-dalek/Cargo.toml $zeroize_source
+end
+git remote set-url origin ssh://git@github.com/hamkj7hpo/curve25519-dalek.git
 git push --set-upstream origin safe-pump-compat-v2
 git fetch origin
 git rebase origin/safe-pump-compat-v2
@@ -255,7 +282,7 @@ else
     end
     git checkout $spl_branch
 end
-fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml
+fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml $zeroize_source
 
 # Fix solana-program dependency in spl-type-length-value
 echo "Fixing solana-program dependency in spl-type-length-value..."
@@ -263,15 +290,18 @@ cd /tmp/deps/spl-type-length-value
 if test -f tlv-account-resolution/Cargo.toml
     inspect_file tlv-account-resolution/Cargo.toml
     cp tlv-account-resolution/Cargo.toml tlv-account-resolution/Cargo.toml.bak
-    sed -i '/solana-program/ s/.*/solana-program = { git = "https:\/\/github.com\/hamkj7hpo\/solana.git", branch = "safe-pump-compat" }/' tlv-account-resolution/Cargo.toml
+    # Remove duplicate solana-program entries
+    sed -i '/^solana-program\s*=/d' tlv-account-resolution/Cargo.toml
+    sed -i '/^\[dependencies\]/a solana-program = { git = "https:\/\/github.com\/hamkj7hpo\/solana.git", branch = "safe-pump-compat" }' tlv-account-resolution/Cargo.toml
     inspect_file tlv-account-resolution/Cargo.toml
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program dependency in spl-type-length-value (version 3.17)" --no-verify
+    git commit -m "Fix solana-program dependency in spl-type-length-value (version 3.22)" --no-verify
     if test "$archived" != "true"
         git push --force
     else
         echo "Skipping push to archived spl-type-length-value repository"
     end
+    rm -f tlv-account-resolution/Cargo.toml.bak
 end
 
 # Return to main project
@@ -279,7 +309,7 @@ cd $ORIGINAL_PWD
 
 # Fix main project Cargo.toml
 echo "Patching ./Cargo.toml for dependencies..."
-fix_zeroize_dependency . Cargo.toml
+fix_zeroize_dependency . Cargo.toml $zeroize_source
 
 # Clean and build
 echo "Cleaning and building the project..."
@@ -291,4 +321,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.17 completed"
+echo "setup.fish version 3.22 completed"
