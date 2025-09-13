@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.15"
+echo "setup.fish version 3.16"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -47,7 +47,7 @@ function fix_zeroize_dependency
         cp $cargo_toml $cargo_toml.bak
         sed -i '/zeroize/ s/.*/zeroize = { git = "https:\/\/github.com\/hamkj7hpo\/utils.git", branch = "safe-pump-compat", version = "1.3.0" }/' $cargo_toml
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.15)" --no-verify
+        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.16)" --no-verify
     else
         echo "Warning: $cargo_toml not found, skipping"
     end
@@ -60,9 +60,26 @@ function get_correct_branch
     set default_branch $argv[2]
 
     cd $repo_dir
+    # Ensure repository is valid
+    if not test -d .git
+        echo "Error: $repo_dir is not a valid git repository"
+        cd $ORIGINAL_PWD
+        return 1
+    end
+
+    # Fetch remote branches
+    git fetch origin 2>/dev/null
+    if test $status -ne 0
+        echo "Error: Failed to fetch remote branches for $repo_dir"
+        cd $ORIGINAL_PWD
+        return 1
+    end
+
     # List available branches
-    set branches (git branch -r | grep -E 'origin/(main|master)' | sed 's/origin\///')
-    if contains "main" $branches
+    set branches (git branch -r | grep -E 'origin/(main|master|safe-pump-compat)' | sed 's/origin\///' | sort -u)
+    if contains "safe-pump-compat" $branches
+        echo "safe-pump-compat"
+    else if contains "main" $branches
         echo "main"
     else if contains "master" $branches
         echo "master"
@@ -86,7 +103,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.15 to fix rebase, cd, and dependency issues"
+git commit -m "Update setup.fish to version 3.16 to fix branch detection and repository validation" --no-verify
 
 # Process solana repository
 echo "Processing solana into /tmp/deps/solana..."
@@ -94,6 +111,11 @@ mkdir -p /tmp/deps
 cd /tmp/deps
 if not test -d solana
     git clone ssh://git@github.com/hamkj7hpo/solana.git
+    if test $status -ne 0
+        echo "Failed to clone solana repository, check SSH access or repository URL"
+        cd $ORIGINAL_PWD
+        exit 1
+    end
 end
 cd solana
 
@@ -106,11 +128,17 @@ end
 # Detect correct branch
 set solana_branch (get_correct_branch . "main")
 if test "$solana_branch" = "unknown"
-    echo "Failed to determine branch for solana"
+    echo "Failed to determine branch for solana, attempting to create safe-pump-compat"
+    git checkout -b safe-pump-compat
+    git push --set-upstream origin safe-pump-compat
+    set solana_branch "safe-pump-compat"
+end
+git checkout $solana_branch
+if test $status -ne 0
+    echo "Failed to checkout $solana_branch in solana"
     cd $ORIGINAL_PWD
     exit 1
 end
-git checkout $solana_branch
 
 # Update and handle rebase
 git fetch origin
@@ -134,6 +162,11 @@ if test -d curve25519-dalek
     rm -rf curve25519-dalek
 end
 git clone ssh://git@github.com/hamkj7hpo/curve25519-dalek.git
+if test $status -ne 0
+    echo "Failed to clone curve25519-dalek repository"
+    cd $ORIGINAL_PWD
+    exit 1
+end
 cd curve25519-dalek
 git checkout -b safe-pump-compat-v2
 fix_zeroize_dependency /tmp/deps/curve25519-dalek curve25519-dalek/Cargo.toml
@@ -163,9 +196,10 @@ if test -d spl-type-length-value
     else
         set spl_branch (get_correct_branch . "main")
         if test "$spl_branch" = "unknown"
-            echo "Failed to determine branch for spl-type-length-value"
-            cd $ORIGINAL_PWD
-            exit 1
+            echo "Failed to determine branch for spl-type-length-value, creating safe-pump-compat"
+            git checkout -b safe-pump-compat
+            git push --set-upstream origin safe-pump-compat
+            set spl_branch "safe-pump-compat"
         end
         git checkout $spl_branch
         git fetch origin
@@ -180,16 +214,20 @@ if test -d spl-type-length-value
     end
 else
     git clone ssh://git@github.com/hamkj7hpo/spl-type-length-value.git
-    cd spl-type-length-value
-    set spl_branch (get_correct_branch . "main")
-    if test "$spl_branch" = "unknown"
-        echo "Failed to determine branch for spl-type-length-value"
+    if test $status -ne 0
+        echo "Failed to clone spl-type-length-value repository"
         cd $ORIGINAL_PWD
         exit 1
     end
+    cd spl-type-length-value
+    set spl_branch (get_correct_branch . "main")
+    if test "$spl_branch" = "unknown"
+        echo "Creating safe-pump-compat branch for spl-type-length-value"
+        git checkout -b safe-pump-compat
+        git push --set-upstream origin safe-pump-compat
+        set spl_branch "safe-pump-compat"
+    end
     git checkout $spl_branch
-    git checkout -b safe-pump-compat
-    git push --set-upstream origin safe-pump-compat
 end
 fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml
 
@@ -200,7 +238,7 @@ if test -f tlv-account-resolution/Cargo.toml
     cp tlv-account-resolution/Cargo.toml tlv-account-resolution/Cargo.toml.bak
     sed -i '/solana-program/ s/.*/solana-program = { git = "https:\/\/github.com\/hamkj7hpo\/solana.git", branch = "safe-pump-compat" }/' tlv-account-resolution/Cargo.toml
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program dependency in spl-type-length-value (version 3.15)" --no-verify
+    git commit -m "Fix solana-program dependency in spl-type-length-value (version 3.16)" --no-verify
     if test "$archived" != "true"
         git push --force
     end
@@ -223,4 +261,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.15 completed"
+echo "setup.fish version 3.16 completed"
