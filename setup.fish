@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
 
+set -q use_https || set use_https false
 # Define hamkj7hpo repositories
 set -l hamkj_repos \
     "solana" \
