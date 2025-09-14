@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.33"
+echo "setup.fish version 3.34"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -30,8 +30,7 @@ function resolve_rebase_conflicts
         inspect_file $conflicted_file
         cp $conflicted_file $conflicted_file.bak
         # Remove conflict markers
-        sed -i.bak '/<<<<<<< HEAD/,/=======$/d' $conflicted_file
-        sed -i.bak '/>>>>>>>.*$/d' $conflicted_file
+        sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' $conflicted_file
         # Ensure zeroize dependency
         if grep -q '^zeroize\s*=' $conflicted_file
             sed -i.bak "s#^zeroize\s*=\s*.*#$zeroize_source#" $conflicted_file
@@ -46,6 +45,17 @@ function resolve_rebase_conflicts
             end
             rm $insertion_file
         end
+        # Fix curve25519-dalek dependency
+        sed -i.bak 's#curve25519-dalek\s*=\s*{[^}]*}##g' $conflicted_file
+        set curve25519_source 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }'
+        set insertion_file (mktemp)
+        echo $curve25519_source > $insertion_file
+        if grep -q '^\[dependencies\]' $conflicted_file
+            sed -i.bak "/^\[dependencies\]/r $insertion_file" $conflicted_file
+        else
+            echo -e "\n[dependencies]\n$curve25519_source" >> $conflicted_file
+        end
+        rm $insertion_file
         sed -i.bak 's#, package = "zeroize"##g' $conflicted_file
         # Clean up [features] section
         sed -i.bak '/^zeroize\s*=\s*{.*$/d' $conflicted_file
@@ -83,8 +93,7 @@ function fix_zeroize_dependency
         inspect_file $cargo_toml
         cp $cargo_toml $cargo_toml.bak
         # Remove conflict markers
-        sed -i.bak '/<<<<<<< HEAD/,/=======$/d' $cargo_toml
-        sed -i.bak '/>>>>>>>.*$/d' $cargo_toml
+        sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' $cargo_toml
         # Ensure zeroize in [dependencies]
         if grep -q '^zeroize\s*=' $cargo_toml
             sed -i.bak "s#^zeroize\s*=\s*.*#$zeroize_source#" $cargo_toml
@@ -99,6 +108,17 @@ function fix_zeroize_dependency
             end
             rm $insertion_file
         end
+        # Fix curve25519-dalek dependency
+        sed -i.bak 's#curve25519-dalek\s*=\s*{[^}]*}##g' $cargo_toml
+        set curve25519_source 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }'
+        set insertion_file (mktemp)
+        echo $curve25519_source > $insertion_file
+        if grep -q '^\[dependencies\]' $cargo_toml
+            sed -i.bak "/^\[dependencies\]/r $insertion_file" $cargo_toml
+        else
+            echo -e "\n[dependencies]\n$curve25519_source" >> $cargo_toml
+        end
+        rm $insertion_file
         sed -i.bak 's#, package = "zeroize"##g' $cargo_toml
         # Ensure [features] section exists and includes zeroize
         if grep -q '^\[features\]' $cargo_toml
@@ -117,8 +137,14 @@ function fix_zeroize_dependency
             cd $ORIGINAL_PWD
             exit 1
         end
+        if not grep -q "$curve25519_source" $cargo_toml
+            echo "Error: Failed to fix curve25519-dalek dependency in $cargo_toml"
+            mv $cargo_toml.bak $cargo_toml
+            cd $ORIGINAL_PWD
+            exit 1
+        end
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.33)" --no-verify
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.34)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -156,6 +182,108 @@ function get_correct_branch
     cd $ORIGINAL_PWD
 end
 
+# Function to reinitialize solana sdk/program/Cargo.toml
+function reinitialize_solana_cargo_toml
+    set cargo_toml $argv[1]
+    echo "Reinitializing $cargo_toml with correct template..."
+    mkdir -p (dirname $cargo_toml)
+    echo "[package]
+name = \"solana-program\"
+description = \"Solana Program\"
+documentation = \"https://docs.rs/solana-program\"
+readme = \"README.md\"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+rust-version = \"1.72.0\"
+
+[dependencies]
+curve25519-dalek = { git = \"https://github.com/hamkj7hpo/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\", features = [\"std\"] }
+bincode = { workspace = true }
+blake3 = { workspace = true, features = [\"digest\", \"traits-preview\"] }
+borsh = { workspace = true }
+borsh0-10 = { package = \"borsh\", version = \"0.10.3\" }
+borsh0-9 = { package = \"borsh\", version = \"0.9.3\" }
+bs58 = { workspace = true }
+bv = { workspace = true, features = [\"serde\"] }
+bytemuck = { workspace = true, features = [\"derive\"] }
+itertools =  { workspace = true }
+lazy_static = { workspace = true }
+log = { workspace = true }
+memoffset = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true, features = [\"i128\"] }
+rustversion = { workspace = true }
+serde = { workspace = true, features = [\"derive\"] }
+serde_bytes = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sha3 = { workspace = true }
+solana-frozen-abi = { workspace = true }
+solana-frozen-abi-macro = { workspace = true }
+solana-sdk-macro = { workspace = true }
+thiserror = { workspace = true }
+
+[target.'cfg(target_os = \"solana\")'.dependencies]
+getrandom = { version = \"0.2.15\", features = [\"custom\"] }
+
+[target.'cfg(not(target_os = \"solana\"))'.dependencies]
+ark-bn254 = { workspace = true }
+ark-ec = { workspace = true }
+ark-ff = { workspace = true }
+ark-serialize = { workspace = true }
+base64 = { workspace = true, features = [\"alloc\", \"std\"] }
+bitflags = { workspace = true }
+itertools = { workspace = true }
+libc = { workspace = true, features = [\"extra_traits\"] }
+libsecp256k1 = { workspace = true }
+light-poseidon = { workspace = true }
+num-bigint = { workspace = true }
+rand = { workspace = true }
+tiny-bip39 = { version = \"0.8.0\" }
+wasm-bindgen = { workspace = true }
+
+[target.'cfg(not(target_os = \"solana\"))'.dev-dependencies]
+solana-logger = { workspace = true }
+
+[target.'cfg(target_arch = \"wasm32\")'.dependencies]
+console_error_panic_hook = { workspace = true }
+console_log = { workspace = true }
+getrandom = { version = \"0.2.15\", features = [\"custom\"] }
+js-sys = { workspace = true }
+
+[target.'cfg(not(target_pointer_width = \"64\"))'.dependencies]
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+anyhow = { workspace = true }
+array-bytes = { workspace = true }
+assert_matches = { workspace = true }
+serde_json = { workspace = true }
+static_assertions = { workspace = true }
+
+[build-dependencies]
+rustc_version = { workspace = true }
+
+[target.'cfg(any(unix, windows))'.build-dependencies]
+cc = { workspace = true, features = [\"jobserver\", \"parallel\"] }
+
+[package.metadata.docs.rs]
+targets = [\"x86_64-unknown-linux-gnu\"]
+
+[lib]
+crate-type = [\"cdylib\", \"rlib\"]
+
+[features]
+zeroize = [\"dep:zeroize\"]
+default = []" > $cargo_toml
+    inspect_file $cargo_toml
+end
+
 # Main setup process
 echo "Checking git configuration..."
 git config --global user.email "safe-pump@example.com"
@@ -177,7 +305,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.33 to handle malformed solana Cargo.toml" --no-verify
+git commit -m "Update setup.fish to version 3.34 to fix conflict markers and curve25519-dalek" --no-verify
 git push origin safe-pump-compat
 
 # Validate utils repository
@@ -233,19 +361,17 @@ if test -d .git/rebase-merge
 end
 # Validate sdk/program/Cargo.toml
 if test -f sdk/program/Cargo.toml
-    if not grep -q '^\[package\]' sdk/program/Cargo.toml
-        echo "Warning: sdk/program/Cargo.toml is malformed, reinitializing solana repository"
-        cd $ORIGINAL_PWD
-        rm -rf /tmp/deps/solana
-        cd /tmp/deps
-        git clone ssh://git@github.com/hamkj7hpo/solana.git
-        if test $status -ne 0
-            echo "Failed to clone solana repository"
-            cd $ORIGINAL_PWD
-            exit 1
-        end
-        cd solana
+    if not grep -q '^\[package\]' sdk/program/Cargo.toml || grep -q '<<<<<<< HEAD' sdk/program/Cargo.toml
+        echo "Warning: sdk/program/Cargo.toml is malformed or contains conflict markers, reinitializing"
+        reinitialize_solana_cargo_toml sdk/program/Cargo.toml
+        git add sdk/program/Cargo.toml
+        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.34)" --no-verify
     end
+else
+    echo "Warning: sdk/program/Cargo.toml not found, reinitializing"
+    reinitialize_solana_cargo_toml sdk/program/Cargo.toml
+    git add sdk/program/Cargo.toml
+    git commit -m "Initialize sdk/program/Cargo.toml (version 3.34)" --no-verify
 end
 set solana_branch (get_correct_branch . "main")
 if test "$solana_branch" = "unknown"
@@ -376,7 +502,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     inspect_file tlv-account-resolution/Cargo.toml
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.33)" --no-verify
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.34)" --no-verify
     rm -f tlv-account-resolution/Cargo.toml.bak
     git push --force
 else
@@ -417,7 +543,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.33)" --no-verify
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.34)" --no-verify
     git push --force
 end
 cd $ORIGINAL_PWD
@@ -428,8 +554,7 @@ if test -f Cargo.toml
     inspect_file Cargo.toml
     cp Cargo.toml Cargo.toml.bak
     # Remove conflict markers and workspace section
-    sed -i.bak '/<<<<<<< HEAD/,/=======$/d' Cargo.toml
-    sed -i.bak '/>>>>>>>.*$/d' Cargo.toml
+    sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' Cargo.toml
     sed -i.bak '/\[workspace\]/,/^\[.*\]$/d' Cargo.toml
     sed -i.bak '/\[patch.crates-io\]/,/^$/d' Cargo.toml
     # Fix zeroize dependency
@@ -442,7 +567,7 @@ if test -f Cargo.toml
     end
     inspect_file Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.33)" --no-verify
+    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.34)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 end
@@ -465,4 +590,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.33 completed"
+echo "setup.fish version 3.34 completed"
