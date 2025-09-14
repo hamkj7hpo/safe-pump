@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.30"
+echo "setup.fish version 3.31"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -36,12 +36,10 @@ function resolve_rebase_conflicts
         if grep -q '^zeroize\s*=' $conflicted_file
             sed -i.bak "s#^zeroize\s*=\s*.*#$zeroize_source#" $conflicted_file
         else
-            # Append after [dependencies] or create section
-            if grep -q '^\[dependencies\]' $conflicted_file
-                sed -i.bak '/^\[dependencies\]/a '"$zeroize_source" $conflicted_file
-            else
-                echo -e "\n[dependencies]\n$zeroize_source" >> $conflicted_file
-            end
+            # Write to temp file and merge
+            set temp_file (mktemp)
+            awk '/^\[dependencies\]/ {print; print "'"$zeroize_source"'"; next} 1' $conflicted_file > $temp_file
+            mv $temp_file $conflicted_file
         end
         sed -i.bak 's#, package = "zeroize"##g' $conflicted_file
         # Clean up [features] section
@@ -86,9 +84,11 @@ function fix_zeroize_dependency
         if grep -q '^zeroize\s*=' $cargo_toml
             sed -i.bak "s#^zeroize\s*=\s*.*#$zeroize_source#" $cargo_toml
         else
-            # Append after [dependencies] or create section
+            # Write to temp file and merge
+            set temp_file (mktemp)
             if grep -q '^\[dependencies\]' $cargo_toml
-                sed -i.bak '/^\[dependencies\]/a '"$zeroize_source" $cargo_toml
+                awk '/^\[dependencies\]/ {print; print "'"$zeroize_source"'"; next} 1' $cargo_toml > $temp_file
+                mv $temp_file $cargo_toml
             else
                 echo -e "\n[dependencies]\n$zeroize_source" >> $cargo_toml
             end
@@ -112,7 +112,7 @@ function fix_zeroize_dependency
             exit 1
         end
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.30)" --no-verify
+        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.31)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -171,7 +171,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.30 to fix zeroize dependency insertion" --no-verify
+git commit -m "Update setup.fish to version 3.31 to fix zeroize dependency insertion with awk" --no-verify
 git push origin safe-pump-compat
 
 # Validate utils repository
@@ -354,7 +354,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     inspect_file tlv-account-resolution/Cargo.toml
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.30)" --no-verify
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.31)" --no-verify
     rm -f tlv-account-resolution/Cargo.toml.bak
     git push --force
 else
@@ -395,7 +395,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.30)" --no-verify
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.31)" --no-verify
     git push --force
 end
 cd $ORIGINAL_PWD
@@ -420,7 +420,7 @@ if test -f Cargo.toml
     end
     inspect_file Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.30)" --no-verify
+    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.31)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 end
@@ -443,4 +443,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.30 completed"
+echo "setup.fish version 3.31 completed"
