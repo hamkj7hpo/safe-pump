@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.58"
+echo "setup.fish version 3.59"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -15,6 +15,22 @@ function inspect_file
         echo "---- End of $file_path ----"
     else
         echo "Error: $file_path does not exist"
+    end
+end
+
+# Function to check SSH key permissions
+function check_ssh_permissions
+    if test -f ~/.ssh/id_rsa || test -f ~/.ssh/id_ed25519
+        if test -r ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+        end
+        if test -r ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+        end
+        echo "SSH key permissions verified"
+    else
+        echo "Warning: No SSH key found in ~/.ssh, falling back to HTTPS for repositories"
+        return 1
     end
 end
 
@@ -169,8 +185,8 @@ function fix_zeroize_dependency
         end
         git checkout $target_branch 2>/dev/null || git checkout -b $target_branch
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.58)" --no-verify || echo "No changes to commit for $cargo_toml"
-        git push --set-upstream origin $target_branch 2>/dev/null || git push origin $target_branch --force
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.59)" --no-verify || echo "No changes to commit for $cargo_toml"
+        git push origin $target_branch 2>/dev/null || git push origin $target_branch --force
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -336,11 +352,20 @@ default = []
     sync # Force file system sync
     cd /tmp/deps/solana
     if test -f $cargo_toml
+        # Check .gitignore
+        if test -f .gitignore && grep -q "sdk/program/Cargo.toml" .gitignore
+            echo "Warning: sdk/program/Cargo.toml is ignored by .gitignore, removing rule"
+            sed -i '/sdk\/program\/Cargo.toml/d' .gitignore
+            git add .gitignore
+            git commit -m "Remove sdk/program/Cargo.toml from .gitignore (version 3.59)" --no-verify
+        end
+        # Reset git index
+        git reset $cargo_toml 2>/dev/null
         git add $cargo_toml
         echo "Debug: Checking for changes in $cargo_toml"
         git diff --cached $cargo_toml
         if git status --porcelain | grep -q $cargo_toml
-            git commit -m "Reinitialize $cargo_toml (version 3.58)" --no-verify
+            git commit -m "Reinitialize $cargo_toml (version 3.59)" --no-verify
             if test $status -ne 0
                 echo "Warning: Failed to commit $cargo_toml, possibly no changes"
             end
@@ -375,6 +400,7 @@ default = []
     echo "Current directory: "(pwd)
     ls -l $cargo_toml
     git status
+    git ls-files $cargo_toml
 end
 
 # Function to fix tlv-account-resolution/Cargo.toml
@@ -412,22 +438,28 @@ git config --global user.email "safe-pump@example.com"
 git config --global user.name "Safe Pump"
 
 echo "Verifying global SSH access to GitHub..."
-ssh -T git@github.com 2>/dev/null
-if test $status -ne 1
-    echo "SSH access to GitHub failed, please configure SSH keys"
-    exit 1
+check_ssh_permissions
+set use_ssh $status
+set repo_prefix "https://github.com/hamkj7hpo/"
+if test $use_ssh -eq 0
+    set repo_prefix "ssh://git@github.com/hamkj7hpo/"
+    ssh -T git@github.com 2>/dev/null
+    if test $status -ne 1
+        echo "SSH access to GitHub failed, falling back to HTTPS"
+        set repo_prefix "https://github.com/hamkj7hpo/"
+    end
 end
 
 # Check for rebase in main repository
 if test -d .git/rebase-merge
     echo "Rebase in progress in main repository, attempting to resolve..."
-    resolve_rebase_conflicts . Cargo.toml "zeroize = { git = \"https://github.com/hamkj7hpo/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
+    resolve_rebase_conflicts . Cargo.toml "zeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
     git checkout safe-pump-compat
 end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.58 to fix solana Cargo.toml and syntax" --no-verify
+git commit -m "Update setup.fish to version 3.59 to fix solana Cargo.toml and permissions" --no-verify
 git push origin safe-pump-compat
 
 # Fix main project Cargo.toml
@@ -440,7 +472,7 @@ if test -f Cargo.toml
     mv Cargo.toml.tmp Cargo.toml
     # Remove duplicate [dependencies] and zeroize entries
     set temp_file (mktemp)
-    set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", path = "zeroize", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
+    set zeroize_source "zeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
     awk -v zeroize="$zeroize_source" '
     BEGIN { in_deps=0; printed_deps=0; deps_content=""; has_zeroize=0 }
     /^\[dependencies\]/ {
@@ -475,25 +507,20 @@ if test -f Cargo.toml
     end
     # Add [patch.crates-io] section
     if ! grep -q '^\[patch.crates-io\]' Cargo.toml
-        echo -e "\n[patch.crates-io]\nzeroize = { git = \"https://github.com/hamkj7hpo/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\" }\ncurve25519-dalek = { git = \"https://github.com/hamkj7hpo/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\" }\nsolana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }\nspl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", branch = \"safe-pump-compat\" }\nspl-tlv-account-resolution = { git = \"https://github.com/hamkj7hpo/spl-type-length-value.git\", branch = \"safe-pump-compat\" }" >> Cargo.toml
+        echo -e "\n[patch.crates-io]\nzeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\" }\ncurve25519-dalek = { git = \"$repo_prefix/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\" }\nsolana-program = { git = \"$repo_prefix/solana.git\", branch = \"safe-pump-compat\" }\nspl-pod = { git = \"$repo_prefix/spl-pod.git\", branch = \"safe-pump-compat\" }\nspl-tlv-account-resolution = { git = \"$repo_prefix/spl-type-length-value.git\", branch = \"safe-pump-compat\" }" >> Cargo.toml
     else
         # Update zeroize patch to use git source
-        awk '/^\[patch.crates-io\]/ {in_patch=1; print; next} in_patch && /^zeroize\s*=/ {print "zeroize = { git = \"https://github.com/hamkj7hpo/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\" }"; next} in_patch && (/^\[/ || /^$/) {in_patch=0} {print}' Cargo.toml > $temp_file
+        awk -v repo_prefix="$repo_prefix" '/^\[patch.crates-io\]/ {in_patch=1; print; next} in_patch && /^zeroize\s*=/ {print "zeroize = { git = \"" repo_prefix "/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\" }"; next} in_patch && (/^\[/ || /^$/) {in_patch=0} {print}' Cargo.toml > $temp_file
         mv $temp_file Cargo.toml
     end
+    # Update all ssh:// URLs to https://
+    sed -i 's|ssh://git@github.com/hamkj7hpo/|https://github.com/hamkj7hpo/|g' Cargo.toml
     inspect_file Cargo.toml
     # Validate changes
     set has_feature (grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && echo 1 || echo 0)
-    set has_dep (awk '/^\[dependencies\]/ {in_deps=1} /^\[/ && !/^\[dependencies\]/ {in_deps=0} in_deps && /^zeroize\s*=/ {print 1; exit} END {print 0}' Cargo.toml)
-    # Ensure variables are set
-    if test -z "$has_feature"
-        set has_feature 0
-    end
-    if test -z "$has_dep"
-        set has_dep 0
-    end
+    set has_dep (awk '/^\[dependencies\]/ {in_deps=1} /^\[/ && !/^\[dependencies\]/ {in_deps=0} in_deps && /^zeroize\s*=/ {print 1; exit} END {if (!in_deps) print 0}' Cargo.toml | head -n 1)
     echo "Debug: has_feature=$has_feature, has_dep=$has_dep"
-    if test -n "$has_feature" && test $has_feature -eq 1 && test -n "$has_dep" && test $has_dep -eq 0
+    if test -n "$has_feature" -a "$has_feature" = "1" -a -n "$has_dep" -a "$has_dep" = "0"
         echo "Error: zeroize feature defined but no zeroize dependency in [dependencies]"
         mv Cargo.toml.bak Cargo.toml
         exit 1
@@ -505,7 +532,7 @@ if test -f Cargo.toml
         exit 1
     end
     git add Cargo.toml
-    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.58)" --no-verify || echo "No changes to commit for Cargo.toml"
+    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.59)" --no-verify || echo "No changes to commit for Cargo.toml"
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 else
@@ -520,7 +547,7 @@ if ! cd /tmp/deps
     exit 1
 end
 if ! test -d utils
-    git clone ssh://git@github.com/hamkj7hpo/utils.git
+    git clone $repo_prefix/utils.git
     if test $status -ne 0
         echo "Failed to clone utils repository, falling back to crates.io"
         set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
@@ -529,10 +556,10 @@ if ! test -d utils
         git checkout safe-pump-compat 2>/dev/null
         if test -d zeroize
             inspect_file zeroize/Cargo.toml
-            set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", path = "zeroize", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
+            set zeroize_source "zeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
         else if test -f Cargo.toml && grep -q 'name\s*=\s*"zeroize"' Cargo.toml
             inspect_file Cargo.toml
-            set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
+            set zeroize_source "zeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
         else
             echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
             set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
@@ -546,10 +573,10 @@ else
     git checkout safe-pump-compat 2>/dev/null
     if test -d zeroize
         inspect_file zeroize/Cargo.toml
-        set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", path = "zeroize", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
+        set zeroize_source "zeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
     else if test -f Cargo.toml && grep -q 'name\s*=\s*"zeroize"' Cargo.toml
         inspect_file Cargo.toml
-        set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
+        set zeroize_source "zeroize = { git = \"$repo_prefix/utils.git\", branch = \"safe-pump-compat\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"], optional = true }"
     else
         echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
         set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
@@ -566,7 +593,7 @@ if ! cd /tmp/deps
     exit 1
 end
 if ! test -d solana
-    git clone ssh://git@github.com/hamkj7hpo/solana.git
+    git clone $repo_prefix/solana.git
     if test $status -ne 0
         echo "Failed to clone solana repository"
         cd $ORIGINAL_PWD
@@ -598,11 +625,21 @@ git fetch origin
 # Ensure file is in git index
 cd /tmp/deps/solana
 if test -f sdk/program/Cargo.toml
+    # Debug git index
+    echo "Debug: Checking git index for sdk/program/Cargo.toml"
+    git ls-files sdk/program/Cargo.toml
+    if test -f .gitignore && grep -q "sdk/program/Cargo.toml" .gitignore
+        echo "Warning: sdk/program/Cargo.toml is ignored by .gitignore, removing rule"
+        sed -i '/sdk\/program\/Cargo.toml/d' .gitignore
+        git add .gitignore
+        git commit -m "Remove sdk/program/Cargo.toml from .gitignore (version 3.59)" --no-verify
+    end
+    git reset sdk/program/Cargo.toml 2>/dev/null
     git add sdk/program/Cargo.toml
     echo "Debug: Checking for changes in sdk/program/Cargo.toml"
     git diff --cached sdk/program/Cargo.toml
     if git status --porcelain | grep -q sdk/program/Cargo.toml
-        git commit -m "Ensure sdk/program/Cargo.toml is committed (version 3.58)" --no-verify
+        git commit -m "Ensure sdk/program/Cargo.toml is committed (version 3.59)" --no-verify
         git push origin $solana_branch --force
     else
         echo "No changes to commit for sdk/program/Cargo.toml"
@@ -625,9 +662,10 @@ else
     reinitialize_solana_cargo_toml sdk/program/Cargo.toml
     cd /tmp/deps/solana
     if test -f sdk/program/Cargo.toml
+        git reset sdk/program/Cargo.toml 2>/dev/null
         git add sdk/program/Cargo.toml
         if git status --porcelain | grep -q sdk/program/Cargo.toml
-            git commit -m "Recreate sdk/program/Cargo.toml after validation failure (version 3.58)" --no-verify
+            git commit -m "Recreate sdk/program/Cargo.toml after validation failure (version 3.59)" --no-verify
             git push origin $solana_branch --force
         else
             echo "No changes to commit for recreated sdk/program/Cargo.toml"
@@ -646,14 +684,20 @@ cd /tmp/deps
 if test -d curve25519-dalek
     rm -rf curve25519-dalek
 end
-# Clear cache to avoid stale files
+# Clear cache with permission check
 echo "Clearing curve25519-dalek cache..."
-sudo rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-* 2>/dev/null || echo "Warning: Failed to clear some cache files"
+if test -w /home/safe-pump/.cargo/git/checkouts
+    rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
+else
+    echo "Warning: No write permissions for /home/safe-pump/.cargo/git/checkouts, attempting to fix..."
+    sudo chown -R safe-pump:safe-pump /home/safe-pump/.cargo
+    rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
+end
 if test -d /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
     echo "Error: Failed to clear curve25519-dalek cache completely"
     exit 1
 end
-git clone ssh://git@github.com/hamkj7hpo/curve25519-dalek.git
+git clone $repo_prefix/curve25519-dalek.git
 if test $status -ne 0
     echo "Failed to clone curve25519-dalek repository"
     cd $ORIGINAL_PWD
@@ -676,7 +720,7 @@ end
 fix_zeroize_dependency /tmp/deps/curve25519-dalek curve25519-dalek/Cargo.toml "$zeroize_source"
 fix_zeroize_dependency /tmp/deps/curve25519-dalek ed25519-dalek/Cargo.toml "$zeroize_source"
 fix_zeroize_dependency /tmp/deps/curve25519-dalek x25519-dalek/Cargo.toml "$zeroize_source"
-git remote set-url origin ssh://git@github.com/hamkj7hpo/curve25519-dalek.git
+git remote set-url origin $repo_prefix/curve25519-dalek.git
 git checkout safe-pump-compat-v2
 git fetch origin
 if git ls-remote --heads origin safe-pump-compat-v2 | grep -q safe-pump-compat-v2
@@ -700,7 +744,7 @@ cd /tmp/deps
 if test -d spl-type-length-value
     rm -rf spl-type-length-value
 end
-git clone ssh://git@github.com/hamkj7hpo/spl-type-length-value.git
+git clone $repo_prefix/spl-type-length-value.git
 if test $status -ne 0
     echo "Failed to clone spl-type-length-value repository"
     cd $ORIGINAL_PWD
@@ -725,9 +769,9 @@ end
 git checkout $spl_branch
 fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
 fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
-git checkout $spl_branch
+git concede git checkout $spl_branch
 git add tlv-account-resolution/Cargo.toml
-git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.58)" --no-verify
+git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.59)" --no-verify
 git push origin $spl_branch --force
 reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 cd $ORIGINAL_PWD
@@ -736,8 +780,6 @@ cd $ORIGINAL_PWD
 echo "Cleaning up untracked .bak and .cargo-ok files..."
 find . -name "*.bak" -delete 2>/dev/null || echo "Warning: Failed to delete some .bak files"
 find /tmp/deps -name "*.bak" -delete 2>/dev/null || echo "Warning: Failed to delete some .bak files in /tmp/deps"
-find . -name ".cargo-ok" -delete 2>/dev/null || echo "Warning: Failed to delete some .cargo-ok files"
-find /tmp/deps -name ".cargo-ok" -delete 2>/dev/null || echo "Warning: Failed to delete some .cargo-ok files in /tmp/deps"
 find /home/safe-pump/.cargo -name ".cargo-ok" -delete 2>/dev/null || echo "Warning: Failed to delete some .cargo-ok files in /home/safe-pump/.cargo"
 
 # Clean and build
@@ -750,4 +792,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.58 completed"
+echo "setup.fish version 3.59 completed"
