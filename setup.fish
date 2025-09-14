@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.26"
+echo "setup.fish version 3.27"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -75,7 +75,7 @@ function fix_zeroize_dependency
         # Remove conflict markers
         sed -i '/<<<<<<< HEAD/,/=======$/d' $cargo_toml
         sed -i '/>>>>>>>.*$/d' $cargo_toml
-        # Replace or add zeroize in [dependencies]
+        # Ensure zeroize in [dependencies]
         if grep -q '^zeroize\s*=' $cargo_toml
             sed -i "s#^zeroize\s*=\s*.*#$zeroize_source#" $cargo_toml
         else
@@ -85,11 +85,15 @@ function fix_zeroize_dependency
         # Clean up [features] section
         sed -i '/^zeroize\s*=\s*{.*$/d' $cargo_toml
         if grep -q '^\[features\]' $cargo_toml && not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' $cargo_toml
-            sed -i '/^\[features\]/a zeroize = ["dep:zeroize"]' $cargo_toml
+            if not grep -q '^\[features\]' $cargo_toml
+                echo -e "\n[features]\nzeroize = [\"dep:zeroize\"]" >> $cargo_toml
+            else
+                sed -i '/^\[features\]/a zeroize = ["dep:zeroize"]' $cargo_toml
+            end
         end
         inspect_file $cargo_toml
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.26)" --no-verify
+        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.27)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -148,7 +152,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.26 to fix Cargo.toml feature error and rebase issues" --no-verify
+git commit -m "Update setup.fish to version 3.27 to fix Cargo.toml dependency error and cleanup" --no-verify
 
 # Validate utils repository
 echo "Validating utils repository for zeroize..."
@@ -298,14 +302,15 @@ if test -d spl-type-length-value
     git checkout $spl_branch
     fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
     if test -f tlv-account-resolution/Cargo.toml
-        echo "Fixing solana-program dependency in spl-type-length-value..."
+        echo "Fixing dependencies in spl-type-length-value/tlv-account-resolution/Cargo.toml..."
+        fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
         inspect_file tlv-account-resolution/Cargo.toml
         cp tlv-account-resolution/Cargo.toml tlv-account-resolution/Cargo.toml.bak
         sed -i '/^solana-program\s*=/d' tlv-account-resolution/Cargo.toml
         sed -i '/^\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' tlv-account-resolution/Cargo.toml
         inspect_file tlv-account-resolution/Cargo.toml
         git add tlv-account-resolution/Cargo.toml
-        git commit -m "Fix solana-program dependency in spl-type-length-value (version 3.26)" --no-verify
+        git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.27)" --no-verify
         rm -f tlv-account-resolution/Cargo.toml.bak
         git push --force
     end
@@ -325,6 +330,9 @@ else
     end
     git checkout $spl_branch
     fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
+    if test -f tlv-account-resolution/Cargo.toml
+        fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
+    end
 end
 cd $ORIGINAL_PWD
 
@@ -345,9 +353,12 @@ if test -f Cargo.toml
     rm -f Cargo.toml.bak
 end
 
-# Clean up untracked .bak files
+# Clean up untracked .bak and .cargo-ok files
 find . -name "*.bak" -delete
 find /tmp/deps -name "*.bak" -delete
+find . -name ".cargo-ok" -delete
+find /tmp/deps -name ".cargo-ok" -delete
+find /home/safe-pump/.cargo -name ".cargo-ok" -delete
 
 # Clean and build
 echo "Cleaning and building the project..."
@@ -359,4 +370,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.26 completed"
+echo "setup.fish version 3.27 completed"
