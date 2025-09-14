@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.40"
+echo "setup.fish version 3.41"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -36,16 +36,16 @@ function resolve_rebase_conflicts
         set zeroize_dep "$zeroize_source"
         set curve25519_dep 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }'
         awk -v zeroize="$zeroize_dep" -v curve25519="$curve25519_dep" '
-        BEGIN { in_deps=0 }
-        /^\[dependencies\]/ { in_deps=1; print; print zeroize; print curve25519; next }
+        BEGIN { in_deps=0; printed_deps=0 }
+        /^\[dependencies\]/ {
+            if (!printed_deps) { in_deps=1; print; print zeroize; print curve25519; printed_deps=1; next }
+        }
         in_deps && (/^\[/ || /^$/) { in_deps=0 }
         !/^(zeroize|curve25519-dalek)\s*=/ { print }
-        END { if (!in_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
+        END { if (!printed_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
         ' $conflicted_file > $temp_file
         mv $temp_file $conflicted_file
-        sed -i.bak 's#, package = "zeroize"##g' $conflicted_file
         # Clean up [features] section
-        sed -i.bak '/^zeroize\s*=\s*{.*$/d' $conflicted_file
         if grep -q '^\[features\]' $conflicted_file && not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' $conflicted_file
             sed -i.bak '/^\[features\]/a zeroize = ["dep:zeroize"]' $conflicted_file
         else if not grep -q '^\[features\]' $conflicted_file
@@ -79,34 +79,25 @@ function fix_zeroize_dependency
         echo "Fixing zeroize dependency in $repo_dir/$cargo_toml"
         inspect_file $cargo_toml
         cp $cargo_toml $cargo_toml.bak
-        # Remove conflict markers and misplaced dependencies
+        # Remove conflict markers and duplicate [dependencies]
         sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' $cargo_toml
-        sed -i.bak '/^\[.*\]/,$!{/^(zeroize|curve25519-dalek)\s*=/d}' $cargo_toml
-        # Remove duplicate or empty [dependencies] sections
-        set temp_file (mktemp)
-        awk '
-        BEGIN { in_deps=0; first_deps=1 }
-        /^\[dependencies\]/ {
-            if (first_deps) { print; in_deps=1; first_deps=0 }
-            else { next }
-        }
-        in_deps && (/^\[/ || /^$/) { in_deps=0 }
-        { print }
-        ' $cargo_toml > $temp_file
-        mv $temp_file $cargo_toml
-        # Ensure zeroize and curve25519-dalek in [dependencies]
+        sed -i.bak '/^\[dependencies\].*\[dependencies\]/d' $cargo_toml
+        # Remove misplaced or duplicate dependencies
+        sed -i.bak '/^(zeroize|curve25519-dalek)\s*=/d' $cargo_toml
+        # Ensure single [dependencies] section
         set temp_file (mktemp)
         set zeroize_dep "$zeroize_source"
         set curve25519_dep 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }'
         awk -v zeroize="$zeroize_dep" -v curve25519="$curve25519_dep" '
-        BEGIN { in_deps=0 }
-        /^\[dependencies\]/ { in_deps=1; print; print zeroize; print curve25519; next }
+        BEGIN { in_deps=0; printed_deps=0 }
+        /^\[dependencies\]/ {
+            if (!printed_deps) { in_deps=1; print; print zeroize; print curve25519; printed_deps=1; next }
+        }
         in_deps && (/^\[/ || /^$/) { in_deps=0 }
         !/^(zeroize|curve25519-dalek)\s*=/ { print }
-        END { if (!in_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
+        END { if (!printed_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
         ' $cargo_toml > $temp_file
         mv $temp_file $cargo_toml
-        sed -i.bak 's#, package = "zeroize"##g' $cargo_toml
         # Ensure [features] section exists and includes zeroize
         if grep -q '^\[features\]' $cargo_toml
             sed -i.bak '/^zeroize\s*=\s*{.*$/d' $cargo_toml
@@ -126,7 +117,7 @@ function fix_zeroize_dependency
                 reinitialize_solana_cargo_toml $cargo_toml
                 git checkout safe-pump-compat
                 git add $cargo_toml
-                git commit -m "Reinitialize $cargo_toml to ensure zeroize dependency (version 3.40)" --no-verify
+                git commit -m "Reinitialize $cargo_toml to ensure zeroize dependency (version 3.41)" --no-verify
             else
                 echo "Error: Failed to add zeroize dependency to $cargo_toml"
                 mv $cargo_toml.bak $cargo_toml
@@ -140,7 +131,7 @@ function fix_zeroize_dependency
                 reinitialize_solana_cargo_toml $cargo_toml
                 git checkout safe-pump-compat
                 git add $cargo_toml
-                git commit -m "Reinitialize $cargo_toml to ensure curve25519-dalek dependency (version 3.40)" --no-verify
+                git commit -m "Reinitialize $cargo_toml to ensure curve25519-dalek dependency (version 3.41)" --no-verify
             else
                 echo "Error: Failed to fix curve25519-dalek dependency in $cargo_toml"
                 mv $cargo_toml.bak $cargo_toml
@@ -148,9 +139,9 @@ function fix_zeroize_dependency
                 exit 1
             end
         end
-        git checkout safe-pump-compat
+        git checkout safe-pump-compat 2>/dev/null || git checkout safe-pump-compat-v2 2>/dev/null
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.40)" --no-verify
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.41)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -158,12 +149,13 @@ function fix_zeroize_dependency
     cd $ORIGINAL_PWD
 end
 
-#_Resetting current branch to safe-pump-compat after potential master commits
+# Function to reset to safe-pump-compat branch
 function reset_to_safe_pump_compat
     set repo_dir $argv[1]
+    set target_branch $argv[2]
     cd $repo_dir
-    if git branch | grep -q "safe-pump-compat"
-        git checkout safe-pump-compat
+    if git branch | grep -q "$target_branch"
+        git checkout $target_branch
         git branch -D master 2>/dev/null
         git push origin --delete master 2>/dev/null
     end
@@ -187,9 +179,11 @@ function get_correct_branch
         cd $ORIGINAL_PWD
         return 1
     end
-    set branches (git branch -r | grep -E 'origin/(main|master|safe-pump-compat)' | sed 's/origin\///' | sort -u)
+    set branches (git branch -r | grep -E 'origin/(main|master|safe-pump-compat|safe-pump-compat-v2)' | sed 's/origin\///' | sort -u)
     if contains "safe-pump-compat" $branches
         echo "safe-pump-compat"
+    else if contains "safe-pump-compat-v2" $branches
+        echo "safe-pump-compat-v2"
     else if contains "main" $branches
         echo "main"
     else if contains "master" $branches
@@ -281,7 +275,7 @@ parking_lot = { workspace = true }
 [dev-dependencies]
 anyhow = { workspace = true }
 array-bytes = { workspace = true }
-assertêncio = { workspace = true }
+assert_matches = { workspace = true }
 serde_json = { workspace = true }
 static_assertions = { workspace = true }
 
@@ -289,16 +283,16 @@ static_assertions = { workspace = true }
 rustc_version = { workspace = true }
 
 [target.'cfg(any(unix, windows))'.build-dependencies]
-cc = { workspace = true, features = ["jobserver", "parallel"] }
+cc = { workspace = true, features = [\"jobserver\", \"parallel\"] }
 
 [package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
+targets = [\"x86_64-unknown-linux-gnu\"]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = [\"cdylib\", \"rlib\"]
 
 [features]
-zeroize = ["dep:zeroize"]
+zeroize = [\"dep:zeroize\"]
 default = []" > $cargo_toml
     inspect_file $cargo_toml
 end
@@ -324,30 +318,32 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.40 to fix curve25519-dalek validation and main Cargo.toml" --no-verify
+git commit -m "Update setup.fish to version 3.41 to fix duplicate dependencies and sed errors" --no-verify
 git push origin safe-pump-compat
 
-# Fix main project Cargo.toml first
+# Fix main project Cargo.toml
 echo "Patching ./Cargo.toml for dependencies..."
 if test -f Cargo.toml
     inspect_file Cargo.toml
     cp Cargo.toml Cargo.toml.bak
-    # Remove conflict markers and workspace section
+    # Remove conflict markers and duplicate [dependencies]
     sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' Cargo.toml
-    sed -i.bak '/\[workspace\]/,/^\[.*\]$/d' Cargo.toml
-    sed -i.bak '/\[patch.crates-io\]/,/^$/d' Cargo.toml
-    # Ensure zeroize in [dependencies]
+    sed -i.bak '/^\[dependencies\].*\[dependencies\]/d' Cargo.toml
+    # Remove misplaced or duplicate dependencies
+    sed -i.bak '/^(zeroize|curve25519-dalek)\s*=/d' Cargo.toml
+    # Ensure single [dependencies] section
     set temp_file (mktemp)
     set zeroize_source 'zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
     awk -v zeroize="$zeroize_source" '
-    BEGIN { in_deps=0 }
-    /^\[dependencies\]/ { in_deps=1; print; print zeroize; next }
+    BEGIN { in_deps=0; printed_deps=0 }
+    /^\[dependencies\]/ {
+        if (!printed_deps) { in_deps=1; print; print zeroize; printed_deps=1; next }
+    }
     in_deps && (/^\[/ || /^$/) { in_deps=0 }
     !/^zeroize\s*=/ { print }
-    END { if (!in_deps) { print "\n[dependencies]\n" zeroize } }
+    END { if (!printed_deps) { print "\n[dependencies]\n" zeroize } }
     ' Cargo.toml > $temp_file
     mv $temp_file Cargo.toml
-    sed -i.bak 's#, package = "zeroize"##g' Cargo.toml
     # Ensure [features] section exists and includes zeroize
     if grep -q '^\[features\]' Cargo.toml
         sed -i.bak '/^zeroize\s*=\s*{.*$/d' Cargo.toml
@@ -356,6 +352,10 @@ if test -f Cargo.toml
         end
     else
         echo -e "\n[features]\nzeroize = [\"dep:zeroize\"]\ncpi = []" >> Cargo.toml
+    end
+    # Add [patch.crates-io] section
+    if not grep -q '^\[patch.crates-io\]' Cargo.toml
+        echo -e "\n[patch.crates-io]\nzeroize = { git = \"https://github.com/hamkj7hpo/utils.git\", branch = \"safe-pump-compat\" }\ncurve25519-dalek = { git = \"https://github.com/hamkj7hpo/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\" }\nsolana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }\nspl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", branch = \"safe-pump-compat\" }\nspl-tlv-account-resolution = { git = \"https://github.com/hamkj7hpo/spl-type-length-value.git\", branch = \"safe-pump-compat\" }" >> Cargo.toml
     end
     inspect_file Cargo.toml
     # Validate changes
@@ -366,7 +366,7 @@ if test -f Cargo.toml
         exit 1
     end
     git add Cargo.toml
-    git commit -m "Add zeroize dependency to Cargo.toml (version 3.40)" --no-verify
+    git commit -m "Add zeroize and patch.crates-io to Cargo.toml (version 3.41)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 end
@@ -389,7 +389,7 @@ if not test -d utils
             echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
             set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
         end
-        reset_to_safe_pump_compat /tmp/deps/utils
+        reset_to_safe_pump_compat /tmp/deps/utils safe-pump-compat
         cd $ORIGINAL_PWD
     end
 else
@@ -403,7 +403,7 @@ else
         echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
         set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"] }'
     end
-    reset_to_safe_pump_compat /tmp/deps/utils
+    reset_to_safe_pump_compat /tmp/deps/utils safe-pump-compat
     cd $ORIGINAL_PWD
 end
 
@@ -431,14 +431,14 @@ if test -f sdk/program/Cargo.toml
         reinitialize_solana_cargo_toml sdk/program/Cargo.toml
         git checkout safe-pump-compat
         git add sdk/program/Cargo.toml
-        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.40)" --no-verify
+        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.41)" --no-verify
     end
 else
     echo "Warning: sdk/program/Cargo.toml not found, reinitializing"
     reinitialize_solana_cargo_toml sdk/program/Cargo.toml
     git checkout safe-pump-compat
     git add sdk/program/Cargo.toml
-    git commit -m "Initialize sdk/program/Cargo.toml (version 3.40)" --no-verify
+    git commit -m "Initialize sdk/program/Cargo.toml (version 3.41)" --no-verify
 end
 set solana_branch (get_correct_branch . "main")
 if test "$solana_branch" = "unknown"
@@ -451,7 +451,7 @@ git checkout $solana_branch
 git fetch origin
 git rebase origin/$solana_branch
 if test $status -ne 0
-    resolve_rebase_conflicts /tmp/deps/solana Cargo.toml "$zeroize_source"
+    resolve_rebase_conflicts /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
     if test $status -ne 0
         cd $ORIGINAL_PWD
         exit 1
@@ -459,7 +459,7 @@ if test $status -ne 0
 end
 git checkout $solana_branch
 git push --force
-reset_to_safe_pump_compat /tmp/deps/solana
+reset_to_safe_pump_compat /tmp/deps/solana safe-pump-compat
 fix_zeroize_dependency /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
 
 # Process curve25519-dalek
@@ -508,7 +508,7 @@ if test $status -ne 0
 end
 git checkout safe-pump-compat-v2
 git push --force
-reset_to_safe_pump_compat /tmp/deps/curve25519-dalek
+reset_to_safe_pump_compat /tmp/deps/curve25519-dalek safe-pump-compat-v2
 
 # Process spl-type-length-value
 echo "Processing spl-type-length-value into /tmp/deps/spl-type-length-value..."
@@ -556,8 +556,12 @@ crate-type = [\"cdylib\", \"lib\"]
 [dependencies]
 spl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", branch = \"safe-pump-compat\" }
 solana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }
-$zeroize_source
-bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-resolution/Cargo.toml
+zeroize = { git = \"https://github.com/hamkj7hpo/utils.git\", branch = \"safe-pump-compat\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"] }
+curve25519-dalek = { git = \"https://github.com/hamkj7hpo/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\", features = [\"std\"] }
+bytemuck = { version = \"1.18.0\", features = [\"derive\"] }
+
+[features]
+zeroize = [\"dep:zeroize\"]" > tlv-account-resolution/Cargo.toml
     end
     echo "Fixing dependencies in spl-type-length-value/tlv-account-resolution/Cargo.toml..."
     fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
@@ -572,10 +576,10 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     inspect_file tlv-account-resolution/Cargo.toml
     git checkout $spl_branch
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.40)" --no-verify
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.41)" --no-verify
     rm -f tlv-account-resolution/Cargo.toml.bak
     git push --force
-    reset_to_safe_pump_compat /tmp/deps/spl-type-length-value
+    reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 else
     git clone ssh://git@github.com/hamkj7hpo/spl-type-length-value.git
     if test $status -ne 0
@@ -609,15 +613,19 @@ crate-type = [\"cdylib\", \"lib\"]
 [dependencies]
 spl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", branch = \"safe-pump-compat\" }
 solana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }
-$zeroize_source
-bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-resolution/Cargo.toml
+zeroize = { git = \"https://github.com/hamkj7hpo/utils.git\", branch = \"safe-pump-compat\", version = \"1.3.0\", features = [\"alloc\", \"zeroize_derive\"] }
+curve25519-dalek = { git = \"https://github.com/hamkj7hpo/curve25519-dalek.git\", branch = \"safe-pump-compat-v2\", features = [\"std\"] }
+bytemuck = { version = \"1.18.0\", features = [\"derive\"] }
+
+[features]
+zeroize = [\"dep:zeroize\"]" > tlv-account-resolution/Cargo.toml
     end
     fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
     git checkout $spl_branch
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.40)" --no-verify
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.41)" --no-verify
     git push --force
-    reset_to_safe_pump_compat /tmp/deps/spl-type-length-value
+    reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 end
 cd $ORIGINAL_PWD
 
@@ -632,11 +640,11 @@ find /home/safe-pump/.cargo -name ".cargo-ok" -delete 2>/dev/null || echo "Warni
 # Clean and build
 echo "Cleaning and building the project..."
 cargo clean
-cargo build
+cargo build --locked
 if test $status -ne 0
     echo "Build failed, check errors above"
-    cargo build --verbose
+    cargo build --locked --verbose
     exit 1
 end
 
-echo "setup.fish version 3.40 completed"
+echo "setup.fish version 3.41 completed"
