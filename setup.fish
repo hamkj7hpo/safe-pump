@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.32"
+echo "setup.fish version 3.33"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -39,7 +39,11 @@ function resolve_rebase_conflicts
             # Use r to insert from file
             set insertion_file (mktemp)
             echo $zeroize_source > $insertion_file
-            sed -i.bak "/^\[dependencies\]/r $insertion_file" $conflicted_file
+            if grep -q '^\[dependencies\]' $conflicted_file
+                sed -i.bak "/^\[dependencies\]/r $insertion_file" $conflicted_file
+            else
+                echo -e "\n[dependencies]\n$zeroize_source" >> $conflicted_file
+            end
             rm $insertion_file
         end
         sed -i.bak 's#, package = "zeroize"##g' $conflicted_file
@@ -88,7 +92,11 @@ function fix_zeroize_dependency
             # Use r to insert from file
             set insertion_file (mktemp)
             echo $zeroize_source > $insertion_file
-            sed -i.bak "/^\[dependencies\]/r $insertion_file" $cargo_toml
+            if grep -q '^\[dependencies\]' $cargo_toml
+                sed -i.bak "/^\[dependencies\]/r $insertion_file" $cargo_toml
+            else
+                echo -e "\n[dependencies]\n$zeroize_source" >> $cargo_toml
+            end
             rm $insertion_file
         end
         sed -i.bak 's#, package = "zeroize"##g' $cargo_toml
@@ -110,7 +118,7 @@ function fix_zeroize_dependency
             exit 1
         end
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.32)" --no-verify
+        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.33)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -169,7 +177,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.32 to fix zeroize dependency insertion with sed r" --no-verify
+git commit -m "Update setup.fish to version 3.33 to handle malformed solana Cargo.toml" --no-verify
 git push origin safe-pump-compat
 
 # Validate utils repository
@@ -222,6 +230,22 @@ cd solana
 if test -d .git/rebase-merge
     echo "Cleaning up stuck rebase in solana"
     git rebase --abort
+end
+# Validate sdk/program/Cargo.toml
+if test -f sdk/program/Cargo.toml
+    if not grep -q '^\[package\]' sdk/program/Cargo.toml
+        echo "Warning: sdk/program/Cargo.toml is malformed, reinitializing solana repository"
+        cd $ORIGINAL_PWD
+        rm -rf /tmp/deps/solana
+        cd /tmp/deps
+        git clone ssh://git@github.com/hamkj7hpo/solana.git
+        if test $status -ne 0
+            echo "Failed to clone solana repository"
+            cd $ORIGINAL_PWD
+            exit 1
+        end
+        cd solana
+    end
 end
 set solana_branch (get_correct_branch . "main")
 if test "$solana_branch" = "unknown"
@@ -352,7 +376,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     inspect_file tlv-account-resolution/Cargo.toml
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.32)" --no-verify
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.33)" --no-verify
     rm -f tlv-account-resolution/Cargo.toml.bak
     git push --force
 else
@@ -393,7 +417,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.32)" --no-verify
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.33)" --no-verify
     git push --force
 end
 cd $ORIGINAL_PWD
@@ -418,7 +442,7 @@ if test -f Cargo.toml
     end
     inspect_file Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.32)" --no-verify
+    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.33)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 end
@@ -441,4 +465,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.32 completed"
+echo "setup.fish version 3.33 completed"
