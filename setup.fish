@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.27"
+echo "setup.fish version 3.29"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -30,19 +30,21 @@ function resolve_rebase_conflicts
         inspect_file $conflicted_file
         cp $conflicted_file $conflicted_file.bak
         # Remove conflict markers
-        sed -i '/<<<<<<< HEAD/,/=======$/d' $conflicted_file
-        sed -i '/>>>>>>>.*$/d' $conflicted_file
+        sed -i.bak '/<<<<<<< HEAD/,/=======$/d' $conflicted_file
+        sed -i.bak '/>>>>>>>.*$/d' $conflicted_file
         # Ensure zeroize dependency
         if grep -q '^zeroize\s*=' $conflicted_file
-            sed -i "s#^zeroize\s*=\s*.*#$zeroize_source#" $conflicted_file
+            sed -i.bak "s#^zeroize\s*=\s*.*#$zeroize_source#" $conflicted_file
         else
-            sed -i "/^\[dependencies\]/a $zeroize_source" $conflicted_file
+            sed -i.bak "/^\[dependencies\]/a $zeroize_source" $conflicted_file
         end
-        sed -i 's#, package = "zeroize"##g' $conflicted_file
+        sed -i.bak 's#, package = "zeroize"##g' $conflicted_file
         # Clean up [features] section
-        sed -i '/^zeroize\s*=\s*{.*$/d' $conflicted_file
+        sed -i.bak '/^zeroize\s*=\s*{.*$/d' $conflicted_file
         if grep -q '^\[features\]' $conflicted_file && not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' $conflicted_file
-            sed -i '/^\[features\]/a zeroize = ["dep:zeroize"]' $conflicted_file
+            sed -i.bak '/^\[features\]/a zeroize = ["dep:zeroize"]' $conflicted_file
+        else if not grep -q '^\[features\]' $conflicted_file
+            echo -e "\n[features]\nzeroize = [\"dep:zeroize\"]" >> $conflicted_file
         end
         inspect_file $conflicted_file
         git add $conflicted_file
@@ -73,27 +75,41 @@ function fix_zeroize_dependency
         inspect_file $cargo_toml
         cp $cargo_toml $cargo_toml.bak
         # Remove conflict markers
-        sed -i '/<<<<<<< HEAD/,/=======$/d' $cargo_toml
-        sed -i '/>>>>>>>.*$/d' $cargo_toml
+        sed -i.bak '/<<<<<<< HEAD/,/=======$/d' $cargo_toml
+        sed -i.bak '/>>>>>>>.*$/d' $cargo_toml
         # Ensure zeroize in [dependencies]
         if grep -q '^zeroize\s*=' $cargo_toml
-            sed -i "s#^zeroize\s*=\s*.*#$zeroize_source#" $cargo_toml
+            sed -i.bak "s#^zeroize\s*=\s*.*#$zeroize_source#" $cargo_toml
         else
-            sed -i "/^\[dependencies\]/a $zeroize_source" $cargo_toml
-        end
-        sed -i 's#, package = "zeroize"##g' $cargo_toml
-        # Clean up [features] section
-        sed -i '/^zeroize\s*=\s*{.*$/d' $cargo_toml
-        if grep -q '^\[features\]' $cargo_toml && not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' $cargo_toml
-            if not grep -q '^\[features\]' $cargo_toml
-                echo -e "\n[features]\nzeroize = [\"dep:zeroize\"]" >> $cargo_toml
+            # Append after [dependencies] section
+            set dep_line (grep -n '^\[dependencies\]' $cargo_toml | cut -d: -f1)
+            if test -n "$dep_line"
+                set next_line (math $dep_line + 1)
+                sed -i.bak "$next_line""i $zeroize_source" $cargo_toml
             else
-                sed -i '/^\[features\]/a zeroize = ["dep:zeroize"]' $cargo_toml
+                echo -e "\n[dependencies]\n$zeroize_source" >> $cargo_toml
             end
         end
+        sed -i.bak 's#, package = "zeroize"##g' $cargo_toml
+        # Ensure [features] section exists and includes zeroize
+        if grep -q '^\[features\]' $cargo_toml
+            sed -i.bak '/^zeroize\s*=\s*{.*$/d' $cargo_toml
+            if not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' $cargo_toml
+                sed -i.bak '/^\[features\]/a zeroize = ["dep:zeroize"]' $cargo_toml
+            end
+        else
+            echo -e "\n[features]\nzeroize = [\"dep:zeroize\"]" >> $cargo_toml
+        end
         inspect_file $cargo_toml
+        # Validate changes
+        if not grep -q "$zeroize_source" $cargo_toml
+            echo "Error: Failed to add zeroize dependency to $cargo_toml"
+            mv $cargo_toml.bak $cargo_toml
+            cd $ORIGINAL_PWD
+            exit 1
+        end
         git add $cargo_toml
-        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.27)" --no-verify
+        git commit -m "Fix zeroize dependency in $cargo_toml (version 3.29)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -152,7 +168,8 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.27 to fix Cargo.toml dependency error and cleanup" --no-verify
+git commit -m "Update setup.fish to version 3.29 to fix syntax error and ensure zeroize dependency" --no-verify
+git push origin safe-pump-compat
 
 # Validate utils repository
 echo "Validating utils repository for zeroize..."
@@ -301,19 +318,44 @@ if test -d spl-type-length-value
     end
     git checkout $spl_branch
     fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
-    if test -f tlv-account-resolution/Cargo.toml
-        echo "Fixing dependencies in spl-type-length-value/tlv-account-resolution/Cargo.toml..."
-        fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
-        inspect_file tlv-account-resolution/Cargo.toml
-        cp tlv-account-resolution/Cargo.toml tlv-account-resolution/Cargo.toml.bak
-        sed -i '/^solana-program\s*=/d' tlv-account-resolution/Cargo.toml
-        sed -i '/^\[dependencies\]/a solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }' tlv-account-resolution/Cargo.toml
-        inspect_file tlv-account-resolution/Cargo.toml
-        git add tlv-account-resolution/Cargo.toml
-        git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.27)" --no-verify
-        rm -f tlv-account-resolution/Cargo.toml.bak
-        git push --force
+    # Ensure tlv-account-resolution/Cargo.toml exists and is updated
+    if not test -f tlv-account-resolution/Cargo.toml
+        echo "Creating tlv-account-resolution/Cargo.toml..."
+        mkdir -p tlv-account-resolution
+        echo "[package]
+name = \"spl-tlv-account-resolution\"
+version = \"0.6.0\"
+description = \"Solana Program Library TLV Account Resolution\"
+edition = \"2021\"
+license = \"Apache-2.0\"
+repository = \"https://github.com/hamkj7hpo/spl-type-length-value\"
+
+[lib]
+crate-type = [\"cdylib\", \"lib\"]
+
+[dependencies]
+spl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", branch = \"safe-pump-compat\" }
+solana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }
+$zeroize_source
+bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-resolution/Cargo.toml
     end
+    echo "Fixing dependencies in spl-type-length-value/tlv-account-resolution/Cargo.toml..."
+    fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
+    inspect_file tlv-account-resolution/Cargo.toml
+    cp tlv-account-resolution/Cargo.toml tlv-account-resolution/Cargo.toml.bak
+    sed -i.bak '/^solana-program\s*=/d' tlv-account-resolution/Cargo.toml
+    set dep_line (grep -n '^\[dependencies\]' tlv-account-resolution/Cargo.toml | cut -d: -f1)
+    if test -n "$dep_line"
+        set next_line (math $dep_line + 1)
+        sed -i.bak "$next_line""i solana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }" tlv-account-resolution/Cargo.toml
+    else
+        echo -e "\n[dependencies]\nsolana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }" >> tlv-account-resolution/Cargo.toml
+    end
+    inspect_file tlv-account-resolution/Cargo.toml
+    git add tlv-account-resolution/Cargo.toml
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.29)" --no-verify
+    rm -f tlv-account-resolution/Cargo.toml.bak
+    git push --force
 else
     git clone ssh://git@github.com/hamkj7hpo/spl-type-length-value.git
     if test $status -ne 0
@@ -330,9 +372,30 @@ else
     end
     git checkout $spl_branch
     fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
-    if test -f tlv-account-resolution/Cargo.toml
-        fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
+    if not test -f tlv-account-resolution/Cargo.toml
+        echo "Creating tlv-account-resolution/Cargo.toml..."
+        mkdir -p tlv-account-resolution
+        echo "[package]
+name = \"spl-tlv-account-resolution\"
+version = \"0.6.0\"
+description = \"Solana Program Library TLV Account Resolution\"
+edition = \"2021\"
+license = \"Apache-2.0\"
+repository = \"https://github.com/hamkj7hpo/spl-type-length-value\"
+
+[lib]
+crate-type = [\"cdylib\", \"lib\"]
+
+[dependencies]
+spl-pod = { git = \"https://github.com/hamkj7hpo/spl-pod.git\", branch = \"safe-pump-compat\" }
+solana-program = { git = \"https://github.com/hamkj7hpo/solana.git\", branch = \"safe-pump-compat\" }
+$zeroize_source
+bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-resolution/Cargo.toml
     end
+    fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
+    git add tlv-account-resolution/Cargo.toml
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.29)" --no-verify
+    git push --force
 end
 cd $ORIGINAL_PWD
 
@@ -342,23 +405,32 @@ if test -f Cargo.toml
     inspect_file Cargo.toml
     cp Cargo.toml Cargo.toml.bak
     # Remove conflict markers and workspace section
-    sed -i '/<<<<<<< HEAD/,/=======$/d' Cargo.toml
-    sed -i '/>>>>>>>.*$/d' Cargo.toml
-    sed -i '/\[workspace\]/,/^\[.*\]$/d' Cargo.toml
-    sed -i '/\[patch.crates-io\]/,/^$/d' Cargo.toml
-    # Clean up [features] section
-    sed -i '/^zeroize\s*=\s*{.*$/d' Cargo.toml
+    sed -i.bak '/<<<<<<< HEAD/,/=======$/d' Cargo.toml
+    sed -i.bak '/>>>>>>>.*$/d' Cargo.toml
+    sed -i.bak '/\[workspace\]/,/^\[.*\]$/d' Cargo.toml
+    sed -i.bak '/\[patch.crates-io\]/,/^$/d' Cargo.toml
     # Fix zeroize dependency
     fix_zeroize_dependency . Cargo.toml "$zeroize_source"
+    # Validate zeroize feature
+    if grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && not grep -q '^zeroize\s*=' Cargo.toml
+        echo "Error: zeroize feature defined but no zeroize dependency in [dependencies]"
+        mv Cargo.toml.bak Cargo.toml
+        exit 1
+    end
+    inspect_file Cargo.toml
+    git add Cargo.toml
+    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.29)" --no-verify
+    git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 end
 
 # Clean up untracked .bak and .cargo-ok files
-find . -name "*.bak" -delete
-find /tmp/deps -name "*.bak" -delete
-find . -name ".cargo-ok" -delete
-find /tmp/deps -name ".cargo-ok" -delete
-find /home/safe-pump/.cargo -name ".cargo-ok" -delete
+echo "Cleaning up untracked .bak and .cargo-ok files..."
+find . -name "*.bak" -delete 2>/dev/null || echo "Warning: Failed to delete some .bak files"
+find /tmp/deps -name "*.bak" -delete 2>/dev/null || echo "Warning: Failed to delete some .bak files in /tmp/deps"
+find . -name ".cargo-ok" -delete 2>/dev/null || echo "Warning: Failed to delete some .cargo-ok files"
+find /tmp/deps -name ".cargo-ok" -delete 2>/dev/null || echo "Warning: Failed to delete some .cargo-ok files in /tmp/deps"
+find /home/safe-pump/.cargo -name ".cargo-ok" -delete 2>/dev/null || echo "Warning: Failed to delete some .cargo-ok files in /home/safe-pump/.cargo"
 
 # Clean and build
 echo "Cleaning and building the project..."
@@ -370,4 +442,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.27 completed"
+echo "setup.fish version 3.29 completed"
