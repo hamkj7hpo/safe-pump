@@ -16,7 +16,7 @@ bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "
 rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }
 sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", rev = "<NEW_COMMIT_HASH>", features = ["std", "serde"] }
 light-poseidon = "0.3.0"
 getrandom = { version = "0.2.15", features = ["custom"] }
 itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }
@@ -67,7 +67,7 @@ overflow-checks = true
 
 [patch.crates-io]
 zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", rev = "f648b06b8b123020fa58006d4776f0489be6f339" }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
