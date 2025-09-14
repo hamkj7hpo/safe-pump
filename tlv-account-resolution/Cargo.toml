@@ -1,0 +1,16 @@
+[package]
+name = "spl-tlv-account-resolution"
+version = "0.6.0"
+description = "Solana Program Library TLV Account Resolution"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/hamkj7hpo/spl-type-length-value"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }
+bytemuck = { version = "1.18.0", features = ["derive"] }
