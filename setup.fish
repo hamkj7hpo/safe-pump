@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.38"
+echo "setup.fish version 3.39"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -31,21 +31,16 @@ function resolve_rebase_conflicts
         cp $conflicted_file $conflicted_file.bak
         # Remove conflict markers
         sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' $conflicted_file
-        # Ensure zeroize and curve25519-dalek dependencies using awk
+        # Ensure zeroize and curve25519-dalek dependencies
         set temp_file (mktemp)
         set zeroize_dep "$zeroize_source"
         set curve25519_dep 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }'
         awk -v zeroize="$zeroize_dep" -v curve25519="$curve25519_dep" '
-        BEGIN { found_deps=0; printed_deps=0 }
-        /^\[dependencies\]/ {
-            if (!printed_deps) {
-                print; print zeroize; print curve25519; found_deps=1; printed_deps=1; next
-            }
-        }
-        /^\[.*\]/ && found_deps { found_deps=0 }
-        /^$/ && found_deps { found_deps=0 }
+        BEGIN { in_deps=0 }
+        /^\[dependencies\]/ { in_deps=1; print; print zeroize; print curve25519; next }
+        in_deps && (/^\[/ || /^$/) { in_deps=0 }
         !/^(zeroize|curve25519-dalek)\s*=/ { print }
-        END { if (!printed_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
+        END { if (!in_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
         ' $conflicted_file > $temp_file
         mv $temp_file $conflicted_file
         sed -i.bak 's#, package = "zeroize"##g' $conflicted_file
@@ -87,7 +82,7 @@ function fix_zeroize_dependency
         # Remove conflict markers and misplaced dependencies
         sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' $cargo_toml
         sed -i.bak '/^\[.*\]/,$!{/^(zeroize|curve25519-dalek)\s*=/d}' $cargo_toml
-        # Remove duplicate [dependencies] sections
+        # Remove duplicate or empty [dependencies] sections
         set temp_file (mktemp)
         awk '
         BEGIN { in_deps=0; first_deps=1 }
@@ -95,8 +90,7 @@ function fix_zeroize_dependency
             if (first_deps) { print; in_deps=1; first_deps=0 }
             else { next }
         }
-        in_deps && /^\[/ { in_deps=0 }
-        in_deps && /^$/ { in_deps=0 }
+        in_deps && (/^\[/ || /^$/) { in_deps=0 }
         { print }
         ' $cargo_toml > $temp_file
         mv $temp_file $cargo_toml
@@ -105,16 +99,11 @@ function fix_zeroize_dependency
         set zeroize_dep "$zeroize_source"
         set curve25519_dep 'curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std"] }'
         awk -v zeroize="$zeroize_dep" -v curve25519="$curve25519_dep" '
-        BEGIN { found_deps=0; printed_deps=0 }
-        /^\[dependencies\]/ {
-            if (!printed_deps) {
-                print; print zeroize; print curve25519; found_deps=1; printed_deps=1; next
-            }
-        }
-        /^\[.*\]/ && found_deps { found_deps=0 }
-        /^$/ && found_deps { found_deps=0 }
+        BEGIN { in_deps=0 }
+        /^\[dependencies\]/ { in_deps=1; print; print zeroize; print curve25519; next }
+        in_deps && (/^\[/ || /^$/) { in_deps=0 }
         !/^(zeroize|curve25519-dalek)\s*=/ { print }
-        END { if (!printed_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
+        END { if (!in_deps) { print "\n[dependencies]\n" zeroize "\n" curve25519 } }
         ' $cargo_toml > $temp_file
         mv $temp_file $cargo_toml
         sed -i.bak 's#, package = "zeroize"##g' $cargo_toml
@@ -130,10 +119,17 @@ function fix_zeroize_dependency
         inspect_file $cargo_toml
         # Validate changes
         if not grep -q "$zeroize_source" $cargo_toml
-            echo "Error: Failed to add zeroize dependency to $cargo_toml"
-            mv $cargo_toml.bak $cargo_toml
-            cd $ORIGINAL_PWD
-            exit 1
+            if test "$cargo_toml" = "sdk/program/Cargo.toml"
+                echo "Warning: Failed to add zeroize to $cargo_toml, reinitializing"
+                reinitialize_solana_cargo_toml $cargo_toml
+                git add $cargo_toml
+                git commit -m "Reinitialize $cargo_toml to ensure zeroize dependency (version 3.39)" --no-verify
+            else
+                echo "Error: Failed to add zeroize dependency to $cargo_toml"
+                mv $cargo_toml.bak $cargo_toml
+                cd $ORIGINAL_PWD
+                exit 1
+            end
         end
         if not grep -q "$curve25519_dep" $cargo_toml
             echo "Error: Failed to fix curve25519-dalek dependency in $cargo_toml"
@@ -142,7 +138,7 @@ function fix_zeroize_dependency
             exit 1
         end
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.38)" --no-verify
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.39)" --no-verify
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -304,7 +300,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.38 to fix zeroize and curve25519-dalek insertion" --no-verify
+git commit -m "Update setup.fish to version 3.39 to fix zeroize insertion and main Cargo.toml" --no-verify
 git push origin safe-pump-compat
 
 # Validate utils repository
@@ -360,17 +356,17 @@ if test -d .git/rebase-merge
 end
 # Validate sdk/program/Cargo.toml
 if test -f sdk/program/Cargo.toml
-    if not grep -q '^\[package\]' sdk/program/Cargo.toml || grep -q '<<<<<<< HEAD' sdk/program/Cargo.toml || grep -q '^\[dependencies\].*\[dependencies\]' sdk/program/Cargo.toml
+    if not grep -q '^\[package\]' sdk/program/Cargo.toml || grep -q '<<<<<<< HEAD' sdk/program/Cargo.toml || grep -q '^\[dependencies\].*\[dependencies\]' sdk/program/Cargo.toml || grep -q '^\[dependencies\]\s*$' sdk/program/Cargo.toml
         echo "Warning: sdk/program/Cargo.toml is malformed or contains conflict markers, reinitializing"
         reinitialize_solana_cargo_toml sdk/program/Cargo.toml
         git add sdk/program/Cargo.toml
-        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.38)" --no-verify
+        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.39)" --no-verify
     end
 else
     echo "Warning: sdk/program/Cargo.toml not found, reinitializing"
     reinitialize_solana_cargo_toml sdk/program/Cargo.toml
     git add sdk/program/Cargo.toml
-    git commit -m "Initialize sdk/program/Cargo.toml (version 3.38)" --no-verify
+    git commit -m "Initialize sdk/program/Cargo.toml (version 3.39)" --no-verify
 end
 set solana_branch (get_correct_branch . "main")
 if test "$solana_branch" = "unknown"
@@ -501,7 +497,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     inspect_file tlv-account-resolution/Cargo.toml
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.38)" --no-verify
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.39)" --no-verify
     rm -f tlv-account-resolution/Cargo.toml.bak
     git push --force
 else
@@ -542,7 +538,7 @@ bytemuck = { version = \"1.18.0\", features = [\"derive\"] }" > tlv-account-reso
     end
     fix_zeroize_dependency /tmp/deps/spl-type-length-value tlv-account-resolution/Cargo.toml "$zeroize_source"
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.38)" --no-verify
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.39)" --no-verify
     git push --force
 end
 cd $ORIGINAL_PWD
@@ -556,17 +552,36 @@ if test -f Cargo.toml
     sed -i.bak '/<<<<<<< HEAD/,/>>>>>>>.*$/d' Cargo.toml
     sed -i.bak '/\[workspace\]/,/^\[.*\]$/d' Cargo.toml
     sed -i.bak '/\[patch.crates-io\]/,/^$/d' Cargo.toml
-    # Fix zeroize dependency
-    fix_zeroize_dependency . Cargo.toml "$zeroize_source"
-    # Validate zeroize feature
+    # Ensure zeroize in [dependencies]
+    set temp_file (mktemp)
+    set zeroize_dep "$zeroize_source"
+    awk -v zeroize="$zeroize_dep" '
+    BEGIN { in_deps=0 }
+    /^\[dependencies\]/ { in_deps=1; print; print zeroize; next }
+    in_deps && (/^\[/ || /^$/) { in_deps=0 }
+    !/^zeroize\s*=/ { print }
+    END { if (!in_deps) { print "\n[dependencies]\n" zeroize } }
+    ' Cargo.toml > $temp_file
+    mv $temp_file Cargo.toml
+    sed -i.bak 's#, package = "zeroize"##g' Cargo.toml
+    # Ensure [features] section exists and includes zeroize
+    if grep -q '^\[features\]' Cargo.toml
+        sed -i.bak '/^zeroize\s*=\s*{.*$/d' Cargo.toml
+        if not grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml
+            sed -i.bak '/^\[features\]/a zeroize = ["dep:zeroize"]' Cargo.toml
+        end
+    else
+        echo -e "\n[features]\nzeroize = [\"dep:zeroize\"]\ncpi = []" >> Cargo.toml
+    end
+    inspect_file Cargo.toml
+    # Validate changes
     if grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && not grep -q '^zeroize\s*=' Cargo.toml
         echo "Error: zeroize feature defined but no zeroize dependency in [dependencies]"
         mv Cargo.toml.bak Cargo.toml
         exit 1
     end
-    inspect_file Cargo.toml
     git add Cargo.toml
-    git commit -m "Fix zeroize dependency in Cargo.toml (version 3.38)" --no-verify
+    git commit -m "Add zeroize dependency to Cargo.toml (version 3.39)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 end
@@ -589,4 +604,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.38 completed"
+echo "setup.fish version 3.39 completed"
