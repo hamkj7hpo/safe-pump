@@ -40,6 +40,7 @@ zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-
 
 
 
+
 # Solana fork & SPL dependencies
 solana-program = { git = "ssh://git@github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 spl-pod = { git = "ssh://git@github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
