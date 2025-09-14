@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.47"
+echo "setup.fish version 3.48"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -150,14 +150,14 @@ function fix_zeroize_dependency
         inspect_file $cargo_toml
         # Validate changes
         set escaped_zeroize (echo "$zeroize_source" | sed 's/[\/.]/\\&/g')
-        if ! grep -q "^zeroize\s*=\s*" $cargo_toml
+        if ! grep -q "$escaped_zeroize" $cargo_toml
             echo "Error: Failed to add zeroize dependency to $cargo_toml"
             mv $cargo_toml.bak $cargo_toml
             cd $ORIGINAL_PWD
             return 1
         end
         set escaped_curve25519 (echo "$curve25519_dep" | sed 's/[\/.]/\\&/g')
-        if ! grep -q "^curve25519-dalek\s*=\s*" $cargo_toml
+        if ! grep -q "$escaped_curve25519" $cargo_toml
             echo "Error: Failed to add curve25519-dalek dependency to $cargo_toml"
             mv $cargo_toml.bak $cargo_toml
             cd $ORIGINAL_PWD
@@ -172,7 +172,7 @@ function fix_zeroize_dependency
             git push --set-upstream origin safe-pump-compat 2>/dev/null
         end
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.47)" --no-verify
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.48)" --no-verify
         git push origin $target_branch --force
         rm -f $cargo_toml.bak
     else
@@ -385,7 +385,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.47 to fix dependency validation" --no-verify
+git commit -m "Update setup.fish to version 3.48 to fix multiple zeroize detection" --no-verify
 git push origin safe-pump-compat
 
 # Fix main project Cargo.toml
@@ -437,19 +437,21 @@ if test -f Cargo.toml
     end
     inspect_file Cargo.toml
     # Validate changes
-    if grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && ! grep -q "^zeroize\s*=\s*" Cargo.toml
+    set has_feature (grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && echo 1 || echo 0)
+    set has_dep (awk '/^\[dependencies\]/ {in_deps=1} /^\[/ && !/^\[dependencies\]/ {in_deps=0} in_deps && /^zeroize\s*=/ {print 1; exit} END {print 0}' Cargo.toml)
+    if test $has_feature -eq 1 -a $has_dep -eq 0
         echo "Error: zeroize feature defined but no zeroize dependency in [dependencies]"
         mv Cargo.toml.bak Cargo.toml
         exit 1
     end
-    set zeroize_count (grep -c "^zeroize\s*=\s*" Cargo.toml)
+    set zeroize_count (awk '/^\[dependencies\]/ {in_deps=1} /^\[/ && !/^\[dependencies\]/ {in_deps=0} in_deps && /^zeroize\s*=/ {count++} END {print count+0}' Cargo.toml)
     if test $zeroize_count -gt 1
         echo "Error: Multiple zeroize entries detected in Cargo.toml"
         mv Cargo.toml.bak Cargo.toml
         exit 1
     end
     git add Cargo.toml
-    git commit -m "Fix dependency validation in Cargo.toml (version 3.47)" --no-verify
+    git commit -m "Fix multiple zeroize detection in Cargo.toml (version 3.48)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 else
@@ -523,14 +525,14 @@ if test -f sdk/program/Cargo.toml
         reinitialize_solana_cargo_toml sdk/program/Cargo.toml
         git checkout safe-pump-compat 2>/dev/null || git checkout -b safe-pump-compat
         git add sdk/program/Cargo.toml
-        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.47)" --no-verify
+        git commit -m "Reinitialize sdk/program/Cargo.toml to fix malformed state (version 3.48)" --no-verify
     end
 else
     echo "Warning: sdk/program/Cargo.toml not found, reinitializing"
     reinitialize_solana_cargo_toml sdk/program/Cargo.toml
     git checkout safe-pump-compat 2>/dev/null || git checkout -b safe-pump-compat
     git add sdk/program/Cargo.toml
-    git commit -m "Initialize sdk/program/Cargo.toml (version 3.47)" --no-verify
+    git commit -m "Initialize sdk/program/Cargo.toml (version 3.48)" --no-verify
 end
 set solana_branch (get_correct_branch . "main")
 if test "$solana_branch" = "unknown"
@@ -646,7 +648,7 @@ if test -d spl-type-length-value
     fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
     git checkout $spl_branch
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.47)" --no-verify
+    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.48)" --no-verify
     git push origin $spl_branch --force
     reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 else
@@ -668,7 +670,7 @@ else
     fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
     git checkout $spl_branch
     git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.47)" --no-verify
+    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.48)" --no-verify
     git push origin $spl_branch --force
     reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 end
@@ -692,4 +694,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.47 completed"
+echo "setup.fish version 3.48 completed"
