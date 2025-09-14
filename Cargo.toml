@@ -34,7 +34,8 @@ uint = { git = "https://github.com/paritytech/parity-common.git", branch = "mast
 wasm-bindgen = "=0.2.93"
 js-sys = "=0.3.70"
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }
-zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }
+
 
 
 
@@ -69,7 +70,7 @@ zeroize = ["dep:zeroize"]
 overflow-checks = true
 
 [patch.crates-io]
-zeroize = { version = "1.3.0" }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0" }
 curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }
 solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
