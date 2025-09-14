@@ -34,7 +34,8 @@ uint = { git = "https://github.com/paritytech/parity-common.git", branch = "mast
 wasm-bindgen = "=0.2.93"
 js-sys = "=0.3.70"
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"] }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }
+
 
 
 # Solana fork & SPL dependencies
