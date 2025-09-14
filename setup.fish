@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.59"
+echo "setup.fish version 3.60"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -28,6 +28,7 @@ function check_ssh_permissions
             chmod 600 ~/.ssh/id_ed25519
         end
         echo "SSH key permissions verified"
+        return 0
     else
         echo "Warning: No SSH key found in ~/.ssh, falling back to HTTPS for repositories"
         return 1
@@ -184,9 +185,12 @@ function fix_zeroize_dependency
             set target_branch "safe-pump-compat-v2"
         end
         git checkout $target_branch 2>/dev/null || git checkout -b $target_branch
+        git update-index --force-remove $cargo_toml 2>/dev/null
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.59)" --no-verify || echo "No changes to commit for $cargo_toml"
-        git push origin $target_branch 2>/dev/null || git push origin $target_branch --force
+        echo "Debug: Git diff for $cargo_toml"
+        git diff --cached $cargo_toml
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.60)" --no-verify || echo "No changes to commit for $cargo_toml"
+        git push origin $target_branch --force
         rm -f $cargo_toml.bak
     else
         echo "Warning: $cargo_toml not found, skipping"
@@ -357,15 +361,17 @@ default = []
             echo "Warning: sdk/program/Cargo.toml is ignored by .gitignore, removing rule"
             sed -i '/sdk\/program\/Cargo.toml/d' .gitignore
             git add .gitignore
-            git commit -m "Remove sdk/program/Cargo.toml from .gitignore (version 3.59)" --no-verify
+            git commit -m "Remove sdk/program/Cargo.toml from .gitignore (version 3.60)" --no-verify
         end
-        # Reset git index
-        git reset $cargo_toml 2>/dev/null
+        # Clean up untracked .bak files
+        find . -name "*.bak" -delete 2>/dev/null || echo "Warning: Failed to delete some .bak files"
+        # Force reindex
+        git update-index --force-remove $cargo_toml 2>/dev/null
         git add $cargo_toml
         echo "Debug: Checking for changes in $cargo_toml"
         git diff --cached $cargo_toml
         if git status --porcelain | grep -q $cargo_toml
-            git commit -m "Reinitialize $cargo_toml (version 3.59)" --no-verify
+            git commit -m "Reinitialize $cargo_toml (version 3.60)" --no-verify
             if test $status -ne 0
                 echo "Warning: Failed to commit $cargo_toml, possibly no changes"
             end
@@ -401,6 +407,7 @@ default = []
     ls -l $cargo_toml
     git status
     git ls-files $cargo_toml
+    git log --oneline -n 5
 end
 
 # Function to fix tlv-account-resolution/Cargo.toml
@@ -440,13 +447,13 @@ git config --global user.name "Safe Pump"
 echo "Verifying global SSH access to GitHub..."
 check_ssh_permissions
 set use_ssh $status
-set repo_prefix "https://github.com/hamkj7hpo/"
+set repo_prefix "https://github.com/hamkj7hpo"
 if test $use_ssh -eq 0
-    set repo_prefix "ssh://git@github.com/hamkj7hpo/"
+    set repo_prefix "ssh://git@github.com/hamkj7hpo"
     ssh -T git@github.com 2>/dev/null
     if test $status -ne 1
         echo "SSH access to GitHub failed, falling back to HTTPS"
-        set repo_prefix "https://github.com/hamkj7hpo/"
+        set repo_prefix "https://github.com/hamkj7hpo"
     end
 end
 
@@ -459,7 +466,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.59 to fix solana Cargo.toml and permissions" --no-verify
+git commit -m "Update setup.fish to version 3.60 to fix URL and solana git issues" --no-verify
 git push origin safe-pump-compat
 
 # Fix main project Cargo.toml
@@ -513,8 +520,9 @@ if test -f Cargo.toml
         awk -v repo_prefix="$repo_prefix" '/^\[patch.crates-io\]/ {in_patch=1; print; next} in_patch && /^zeroize\s*=/ {print "zeroize = { git = \"" repo_prefix "/utils.git\", branch = \"safe-pump-compat\", path = \"zeroize\", version = \"1.3.0\" }"; next} in_patch && (/^\[/ || /^$/) {in_patch=0} {print}' Cargo.toml > $temp_file
         mv $temp_file Cargo.toml
     end
-    # Update all ssh:// URLs to https://
+    # Fix any double slashes and convert ssh:// to https://
     sed -i 's|ssh://git@github.com/hamkj7hpo/|https://github.com/hamkj7hpo/|g' Cargo.toml
+    sed -i 's|https://github.com/hamkj7hpo//|https://github.com/hamkj7hpo/|g' Cargo.toml
     inspect_file Cargo.toml
     # Validate changes
     set has_feature (grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && echo 1 || echo 0)
@@ -531,8 +539,9 @@ if test -f Cargo.toml
         mv Cargo.toml.bak Cargo.toml
         exit 1
     end
+    git update-index --force-remove Cargo.toml 2>/dev/null
     git add Cargo.toml
-    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.59)" --no-verify || echo "No changes to commit for Cargo.toml"
+    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.60)" --no-verify || echo "No changes to commit for Cargo.toml"
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 else
@@ -605,6 +614,8 @@ if test -d .git/rebase-merge
     echo "Cleaning up stuck rebase in solana"
     git rebase --abort
 end
+# Clean up untracked .bak files
+find . -name "*.bak" -delete 2>/dev/null || echo "Warning: Failed to delete some .bak files"
 # Check for multiple Cargo.toml files
 echo "Debug: Listing all Cargo.toml files in solana repository"
 find . -name "Cargo.toml" -type f
@@ -632,14 +643,15 @@ if test -f sdk/program/Cargo.toml
         echo "Warning: sdk/program/Cargo.toml is ignored by .gitignore, removing rule"
         sed -i '/sdk\/program\/Cargo.toml/d' .gitignore
         git add .gitignore
-        git commit -m "Remove sdk/program/Cargo.toml from .gitignore (version 3.59)" --no-verify
+        git commit -m "Remove sdk/program/Cargo.toml from .gitignore (version 3.60)" --no-verify
     end
-    git reset sdk/program/Cargo.toml 2>/dev/null
+    git update-index --force-remove sdk/program/Cargo.toml 2>/dev/null
     git add sdk/program/Cargo.toml
     echo "Debug: Checking for changes in sdk/program/Cargo.toml"
     git diff --cached sdk/program/Cargo.toml
+    git log --oneline -n 5
     if git status --porcelain | grep -q sdk/program/Cargo.toml
-        git commit -m "Ensure sdk/program/Cargo.toml is committed (version 3.59)" --no-verify
+        git commit -m "Ensure sdk/program/Cargo.toml is committed (version 3.60)" --no-verify
         git push origin $solana_branch --force
     else
         echo "No changes to commit for sdk/program/Cargo.toml"
@@ -662,10 +674,10 @@ else
     reinitialize_solana_cargo_toml sdk/program/Cargo.toml
     cd /tmp/deps/solana
     if test -f sdk/program/Cargo.toml
-        git reset sdk/program/Cargo.toml 2>/dev/null
+        git update-index --force-remove sdk/program/Cargo.toml 2>/dev/null
         git add sdk/program/Cargo.toml
         if git status --porcelain | grep -q sdk/program/Cargo.toml
-            git commit -m "Recreate sdk/program/Cargo.toml after validation failure (version 3.59)" --no-verify
+            git commit -m "Recreate sdk/program/Cargo.toml after validation failure (version 3.60)" --no-verify
             git push origin $solana_branch --force
         else
             echo "No changes to commit for recreated sdk/program/Cargo.toml"
@@ -686,16 +698,24 @@ if test -d curve25519-dalek
 end
 # Clear cache with permission check
 echo "Clearing curve25519-dalek cache..."
-if test -w /home/safe-pump/.cargo/git/checkouts
-    rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
+if test -d /home/safe-pump/.cargo/git/checkouts
+    if ls /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-* >/dev/null 2>&1
+        if test -w /home/safe-pump/.cargo/git/checkouts
+            rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
+        else
+            echo "Warning: No write permissions for /home/safe-pump/.cargo/git/checkouts, attempting to fix..."
+            sudo chown -R safe-pump:safe-pump /home/safe-pump/.cargo
+            rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
+        end
+        if ls /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-* >/dev/null 2>&1
+            echo "Error: Failed to clear curve25519-dalek cache completely"
+            exit 1
+        end
+    else
+        echo "No curve25519-dalek cache found, skipping cache clear"
+    end
 else
-    echo "Warning: No write permissions for /home/safe-pump/.cargo/git/checkouts, attempting to fix..."
-    sudo chown -R safe-pump:safe-pump /home/safe-pump/.cargo
-    rm -rf /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
-end
-if test -d /home/safe-pump/.cargo/git/checkouts/curve25519-dalek-*
-    echo "Error: Failed to clear curve25519-dalek cache completely"
-    exit 1
+    echo "No .cargo/git/checkouts directory found, skipping cache clear"
 end
 git clone $repo_prefix/curve25519-dalek.git
 if test $status -ne 0
@@ -769,9 +789,9 @@ end
 git checkout $spl_branch
 fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
 fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
-git concede git checkout $spl_branch
+git checkout $spl_branch
 git add tlv-account-resolution/Cargo.toml
-git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.59)" --no-verify
+git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.60)" --no-verify
 git push origin $spl_branch --force
 reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 cd $ORIGINAL_PWD
@@ -792,4 +812,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.59 completed"
+echo "setup.fish version 3.60 completed"
