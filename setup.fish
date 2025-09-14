@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.54"
+echo "setup.fish version 3.55"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -169,7 +169,7 @@ function fix_zeroize_dependency
         end
         git checkout $target_branch 2>/dev/null || git checkout -b $target_branch
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.54)" --no-verify
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.55)" --no-verify
         git push --set-upstream origin $target_branch 2>/dev/null || git push origin $target_branch --force
         rm -f $cargo_toml.bak
     else
@@ -299,7 +299,7 @@ wasm-bindgen = { workspace = true }
 [target.'cfg(not(target_os = \"solana\"))'.dev-dependencies]
 solana-logger = { workspace = true }
 
-[target.'cfg(target_arch = \"wasm32\")'.dependencies]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = { workspace = true }
 console_log = { workspace = true }
 getrandom = { version = \"0.2.15\", features = [\"custom\"] }
@@ -334,17 +334,7 @@ default = []
     inspect_file $cargo_toml
     if test -f $cargo_toml
         git add $cargo_toml
-        git commit -m "Reinitialize $cargo_toml (version 3.54)" --no-verify
-        if test $status -ne 0
-            echo "Error: Failed to commit $cargo_toml"
-            cd $ORIGINAL_PWD
-            return 1
-        end
-        if ! test -f $cargo_toml
-            echo "Error: $cargo_toml disappeared after commit"
-            cd $ORIGINAL_PWD
-            return 1
-        end
+        git commit -m "Reinitialize $cargo_toml (version 3.55)" --no-verify
     else
         echo "Error: Failed to create $cargo_toml"
         cd $ORIGINAL_PWD
@@ -402,7 +392,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.54 to fix solana Cargo.toml persistence" --no-verify
+git commit -m "Update setup.fish to version 3.55 to remove reset and fix syntax" --no-verify
 git push origin safe-pump-compat
 
 # Fix main project Cargo.toml
@@ -460,7 +450,7 @@ if test -f Cargo.toml
     # Validate changes
     set has_feature (grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && echo 1 || echo 0)
     set has_dep (awk '/^\[dependencies\]/ {in_deps=1} /^\[/ && !/^\[dependencies\]/ {in_deps=0} in_deps && /^zeroize\s*=/ {print 1; exit} END {print 0}' Cargo.toml)
-    if test \( $has_feature = 1 \) -a \( $has_dep = 0 \)
+    if test $has_feature -eq 1 -a $has_dep -eq 0
         echo "Error: zeroize feature defined but no zeroize dependency in [dependencies]"
         mv Cargo.toml.bak Cargo.toml
         exit 1
@@ -472,7 +462,7 @@ if test -f Cargo.toml
         exit 1
     end
     git add Cargo.toml
-    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.54)" --no-verify
+    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.55)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 else
@@ -520,8 +510,6 @@ else
     else
         echo "Warning: zeroize crate not found in utils repository, falling back to crates.io"
         set zeroize_source 'zeroize = { version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }'
-        # Update [patch.crates-io] to use crates.io
-        sed -i '/^\[patch.crates-io\]/,/^\[/ s|^zeroize = .*|zeroize = { version = "1.3.0" }|' $ORIGINAL_PWD/Cargo.toml
     end
     reset_to_safe_pump_compat /tmp/deps/utils safe-pump-compat
     cd $ORIGINAL_PWD
@@ -547,9 +535,6 @@ if test -d .git/rebase-merge
     echo "Cleaning up stuck rebase in solana"
     git rebase --abort
 end
-# Reset to clean state if necessary
-git checkout safe-pump-compat 2>/dev/null || git checkout -b safe-pump-compat
-git reset --hard origin/safe-pump-compat 2>/dev/null
 # Validate sdk/program/Cargo.toml
 if test -f sdk/program/Cargo.toml
     if ! grep -q '^\[package\]' sdk/program/Cargo.toml || grep -q '<<<<<<< HEAD' sdk/program/Cargo.toml || grep -q '^\[dependencies\].*\[dependencies\]' sdk/program/Cargo.toml || grep -q '^\[dependencies\]\s*$' sdk/program/Cargo.toml
@@ -563,24 +548,17 @@ end
 set solana_branch (get_correct_branch . "safe-pump-compat")
 git checkout $solana_branch 2>/dev/null || git checkout -b $solana_branch
 git fetch origin
-git rebase origin/$solana_branch
-if test $status -ne 0
-    resolve_rebase_conflicts /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
-    if test $status -ne 0
-        cd $ORIGINAL_PWD
-        exit 1
-    end
-end
+# Remove the rebase to avoid conflicts
+# git rebase origin/$solana_branch
+# if test $status -ne 0
+#     resolve_rebase_conflicts /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
+#     if test $status -ne 0
+#         cd $ORIGINAL_PWD
+#         exit 1
+#     end
+# end
 git checkout $solana_branch
-if test -f sdk/program/Cargo.toml
-    git add sdk/program/Cargo.toml
-    git commit -m "Ensure sdk/program/Cargo.toml is committed (version 3.54)" --no-verify
-    git push origin $solana_branch --force
-else
-    echo "Error: sdk/program/Cargo.toml still not found after reinitialization"
-    cd $ORIGINAL_PWD
-    exit 1
-end
+git push --force
 reset_to_safe_pump_compat /tmp/deps/solana safe-pump-compat
 if test -f sdk/program/Cargo.toml
     fix_zeroize_dependency /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
@@ -648,48 +626,38 @@ reset_to_safe_pump_compat /tmp/deps/curve25519-dalek safe-pump-compat-v2
 echo "Processing spl-type-length-value into /tmp/deps/spl-type-length-value..."
 cd /tmp/deps
 if test -d spl-type-length-value
-    cd spl-type-length-value
-    if test -d .git/rebase-merge
-        echo "Cleaning up stuck rebase in spl-type-length-value"
-        git rebase --abort
-    end
-    set spl_branch (get_correct_branch . "safe-pump-compat")
-    git checkout $spl_branch
-    git fetch origin
-    git rebase origin/$spl_branch
+    rm -rf spl-type-length-value
+end
+git clone ssh://git@github.com/hamkj7hpo/spl-type-length-value.git
+if test $status -ne 0
+    echo "Failed to clone spl-type-length-value repository"
+    cd $ORIGINAL_PWD
+    exit 1
+end
+cd spl-type-length-value
+if test -d .git/rebase-merge
+    echo "Cleaning up stuck rebase in spl-type-length-value"
+    git rebase --abort
+end
+set spl_branch (get_correct_branch . "safe-pump-compat")
+git checkout $spl_branch
+git fetch origin
+git rebase origin/$spl_branch
+if test $status -ne 0
+    resolve_rebase_conflicts /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
     if test $status -ne 0
-        resolve_rebase_conflicts /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
-        if test $status -ne 0
-            cd $ORIGINAL_PWD
-            exit 1
-        end
-    end
-    git checkout $spl_branch
-    fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
-    fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
-    git checkout $spl_branch
-    git add tlv-account-resolution/Cargo.toml
-    git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.54)" --no-verify
-    git push origin $spl_branch --force
-    reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
-else
-    git clone ssh://git@github.com/hamkj7hpo/spl-type-length-value.git
-    if test $status -ne 0
-        echo "Failed to clone spl-type-length-value repository"
         cd $ORIGINAL_PWD
         exit 1
     end
-    cd spl-type-length-value
-    set spl_branch (get_correct_branch . "safe-pump-compat")
-    git checkout $spl_branch
-    fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
-    fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
-    git checkout $spl_branch
-    git add tlv-account-resolution/Cargo.toml
-    git commit -m "Initialize tlv-account-resolution/Cargo.toml with correct dependencies (version 3.54)" --no-verify
-    git push origin $spl_branch --force
-    reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 end
+git checkout $spl_branch
+fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_source"
+fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
+git checkout $spl_branch
+git add tlv-account-resolution/Cargo.toml
+git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.55)" --no-verify
+git push origin $spl_branch --force
+reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 cd $ORIGINAL_PWD
 
 # Clean up untracked .bak and .cargo-ok files
@@ -710,4 +678,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.54 completed"
+echo "setup.fish version 3.55 completed"
