@@ -63,3 +63,5 @@ cpi = []
 
 [profile.release]
 overflow-checks = true
+
+[dependencies]
