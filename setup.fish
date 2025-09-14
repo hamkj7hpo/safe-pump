@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # setup.fish
-echo "setup.fish version 3.55"
+echo "setup.fish version 3.56"
 
 # Store the initial working directory
 set -x ORIGINAL_PWD (pwd)
@@ -169,7 +169,7 @@ function fix_zeroize_dependency
         end
         git checkout $target_branch 2>/dev/null || git checkout -b $target_branch
         git add $cargo_toml
-        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.55)" --no-verify
+        git commit -m "Fix zeroize and curve25519-dalek dependencies in $cargo_toml (version 3.56)" --no-verify
         git push --set-upstream origin $target_branch 2>/dev/null || git push origin $target_branch --force
         rm -f $cargo_toml.bak
     else
@@ -299,7 +299,7 @@ wasm-bindgen = { workspace = true }
 [target.'cfg(not(target_os = \"solana\"))'.dev-dependencies]
 solana-logger = { workspace = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+[target.'cfg(target_arch = \"wasm32\")'.dependencies]
 console_error_panic_hook = { workspace = true }
 console_log = { workspace = true }
 getrandom = { version = \"0.2.15\", features = [\"custom\"] }
@@ -332,14 +332,40 @@ zeroize = [\"dep:zeroize\"]
 default = []
 " > $cargo_toml
     inspect_file $cargo_toml
+    sleep 1 # Add delay to ensure file system sync
     if test -f $cargo_toml
         git add $cargo_toml
-        git commit -m "Reinitialize $cargo_toml (version 3.55)" --no-verify
+        git commit -m "Reinitialize $cargo_toml (version 3.56)" --no-verify
+        if test $status -ne 0
+            echo "Error: Failed to commit $cargo_toml"
+            cd $ORIGINAL_PWD
+            return 1
+        end
+        # Verify file existence with retry
+        set retries 3
+        set file_exists 0
+        for i in (seq $retries)
+            if test -f $cargo_toml
+                set file_exists 1
+                break
+            end
+            echo "Retry $i: $cargo_toml not found, waiting..."
+            sleep 1
+        end
+        if test $file_exists -eq 0
+            echo "Error: $cargo_toml not found after retries"
+            cd $ORIGINAL_PWD
+            return 1
+        end
     else
         echo "Error: Failed to create $cargo_toml"
         cd $ORIGINAL_PWD
         return 1
     end
+    # Debug file state
+    echo "Debug: Checking file state after commit"
+    ls -l $cargo_toml
+    git status
 end
 
 # Function to fix tlv-account-resolution/Cargo.toml
@@ -392,7 +418,7 @@ end
 
 echo "Committing changes to setup.fish..."
 git add setup.fish
-git commit -m "Update setup.fish to version 3.55 to remove reset and fix syntax" --no-verify
+git commit -m "Update setup.fish to version 3.56 to fix solana Cargo.toml and syntax" --no-verify
 git push origin safe-pump-compat
 
 # Fix main project Cargo.toml
@@ -450,7 +476,7 @@ if test -f Cargo.toml
     # Validate changes
     set has_feature (grep -q 'zeroize\s*=\s*\["dep:zeroize"\]' Cargo.toml && echo 1 || echo 0)
     set has_dep (awk '/^\[dependencies\]/ {in_deps=1} /^\[/ && !/^\[dependencies\]/ {in_deps=0} in_deps && /^zeroize\s*=/ {print 1; exit} END {print 0}' Cargo.toml)
-    if test $has_feature -eq 1 -a $has_dep -eq 0
+    if test $has_feature -eq 1 && test $has_dep -eq 0
         echo "Error: zeroize feature defined but no zeroize dependency in [dependencies]"
         mv Cargo.toml.bak Cargo.toml
         exit 1
@@ -462,7 +488,7 @@ if test -f Cargo.toml
         exit 1
     end
     git add Cargo.toml
-    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.55)" --no-verify
+    git commit -m "Fix zeroize optional dependency in Cargo.toml (version 3.56)" --no-verify
     git push origin safe-pump-compat
     rm -f Cargo.toml.bak
 else
@@ -548,18 +574,20 @@ end
 set solana_branch (get_correct_branch . "safe-pump-compat")
 git checkout $solana_branch 2>/dev/null || git checkout -b $solana_branch
 git fetch origin
-# Remove the rebase to avoid conflicts
-# git rebase origin/$solana_branch
-# if test $status -ne 0
-#     resolve_rebase_conflicts /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
-#     if test $status -ne 0
-#         cd $ORIGINAL_PWD
-#         exit 1
-#     end
-# end
-git checkout $solana_branch
-git push --force
-reset_to_safe_pump_compat /tmp/deps/solana safe-pump-compat
+# Ensure file is in git index
+if test -f sdk/program/Cargo.toml
+    git add sdk/program/Cargo.toml
+    git commit -m "Ensure sdk/program/Cargo.toml is committed (version 3.56)" --no-verify
+    git push origin $solana_branch --force
+else
+    echo "Error: sdk/program/Cargo.toml not found after reinitialization"
+    cd $ORIGINAL_PWD
+    exit 1
+end
+# Final validation with debug
+echo "Debug: Verifying sdk/program/Cargo.toml presence"
+ls -l sdk/program/Cargo.toml
+git status
 if test -f sdk/program/Cargo.toml
     fix_zeroize_dependency /tmp/deps/solana sdk/program/Cargo.toml "$zeroize_source"
 else
@@ -567,6 +595,7 @@ else
     cd $ORIGINAL_PWD
     exit 1
 end
+cd $ORIGINAL_PWD
 
 # Process curve25519-dalek
 echo "Processing curve25519-dalek into /tmp/deps/curve25519-dalek..."
@@ -655,7 +684,7 @@ fix_zeroize_dependency /tmp/deps/spl-type-length-value Cargo.toml "$zeroize_sour
 fix_tlv_account_resolution tlv-account-resolution/Cargo.toml
 git checkout $spl_branch
 git add tlv-account-resolution/Cargo.toml
-git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.55)" --no-verify
+git commit -m "Fix solana-program and zeroize dependencies in spl-type-length-value/tlv-account-resolution (version 3.56)" --no-verify
 git push origin $spl_branch --force
 reset_to_safe_pump_compat /tmp/deps/spl-type-length-value safe-pump-compat
 cd $ORIGINAL_PWD
@@ -678,4 +707,4 @@ if test $status -ne 0
     exit 1
 end
 
-echo "setup.fish version 3.55 completed"
+echo "setup.fish version 3.56 completed"
