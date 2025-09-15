@@ -11,33 +11,33 @@ crate-type = ["cdylib", "lib"]
 # Core Rust utilities
 base64ct = "1.6.0"
 bincode = "1.3.3"
-bytemuck = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main", features = ["derive"] }
-bytemuck_derive = { git = "https://github.com/Lokathor/bytemuck.git", branch = "main" }
-rand = { git = "https://github.com/rust-random/rand.git", branch = "master" }
-sha3 = { git = "https://github.com/RustCrypto/hashes.git", branch = "master" }
+bytemuck = { version = "1.18.0", features = ["derive"] }
+bytemuck_derive = "1.7.0"
+rand = "0.8.5"
+sha3 = "0.10.8"
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", rev = "<NEW_COMMIT_HASH>", features = ["std", "serde"] }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
 light-poseidon = "0.3.0"
 getrandom = { version = "0.2.15", features = ["custom"] }
-itertools = { git = "https://github.com/rust-itertools/itertools.git", branch = "master" }
-lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", branch = "master" }
-num = { git = "https://github.com/rust-num/num.git", branch = "master" }
-num-derive = { git = "https://github.com/rust-num/num-derive.git", branch = "master" }
-num-traits = { git = "https://github.com/rust-num/num-traits.git", branch = "master" }
-serde = { git = "https://github.com/serde-rs/serde.git", branch = "master" }
-serde_derive = { git = "https://github.com/serde-rs/serde.git", branch = "master" }
-serde_json = { git = "https://github.com/serde-rs/json.git", branch = "master" }
-subtle = { git = "https://github.com/dalek-cryptography/subtle.git", branch = "main" }
-thiserror = { git = "https://github.com/dtolnay/thiserror.git", branch = "master" }
-tiny-bip39 = { git = "https://github.com/maciejhirsz/tiny-bip39.git", branch = "master" }
-uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master" }
+itertools = "0.10.5"
+lazy_static = "1.4.0"
+num = "0.4.3"
+num-derive = "0.3.3"
+num-traits = "0.2.19"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_derive = "1.0.210"
+serde_json = "1.0.128"
+subtle = "2.4.1"
+thiserror = "1.0.63"
+tiny-bip39 = "1.0.0"
+uint = "0.9.5"
 wasm-bindgen = "=0.2.93"
 js-sys = "=0.3.70"
-aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs.git", branch = "master" }
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0", features = ["alloc", "zeroize_derive"], optional = true }
+aes-gcm-siv = "0.10.3"
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", features = ["alloc", "zeroize_derive"], optional = true }
 
-# Solana fork & SPL dependencies
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+# Solana & SPL crates (use official solana-program crate to avoid local fork issues)
+solana-program = "1.25.0"
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
 spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }
@@ -66,8 +66,10 @@ zeroize = ["dep:zeroize"]
 overflow-checks = true
 
 [patch.crates-io]
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.3.0" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", rev = "f648b06b8b123020fa58006d4776f0489be6f339" }
-solana-program = { git = "https://github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat" }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }
 spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
 spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
+
+[patch.'https://github.com/hamkj7hpo/raydium-cp-swap.git']
+raydium-cp-swap = { path = "/tmp/deps/raydium-cp-swap/programs/cp-swap" }
