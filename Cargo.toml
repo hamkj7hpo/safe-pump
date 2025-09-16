@@ -1,6 +1,6 @@
 [package]
 name = "safe_pump"
-version = "0.1.0"
+version = "3.0.0"
 edition = "2021"
 resolver = "2"
 
@@ -16,7 +16,7 @@ bytemuck_derive = "1.7.0"
 rand = "0.8.5"
 sha3 = "0.10.8"
 merlin = { git = "https://github.com/dalek-cryptography/merlin.git", branch = "master" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
+curve25519-dalek = { git = "ssh://git@github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
 light-poseidon = "0.3.0"
 getrandom = { version = "0.2.15", features = ["custom"] }
 itertools = "0.10.5"
@@ -34,42 +34,34 @@ uint = "0.9.5"
 wasm-bindgen = "=0.2.93"
 js-sys = "=0.3.70"
 aes-gcm-siv = "0.10.3"
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", features = ["alloc", "zeroize_derive"], optional = true }
 
-# Solana & SPL crates (use official solana-program crate to avoid local fork issues)
-solana-program = "1.25.0"
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
-spl-associated-token-account = { git = "https://github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }
-spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }
-spl-discriminator = { git = "https://github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
-spl-token-2022 = { git = "https://github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022", default-features = false }
-spl-memo = { git = "https://github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
-spl-transfer-hook-interface = { git = "https://github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }
-spl-token-metadata-interface = { git = "https://github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }
-spl-token-group-interface = { git = "https://github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
+# Optional local dependency zeroize handled via solana-program
+solana-program = { git = "ssh://git@github.com/hamkj7hpo/solana.git", branch = "safe-pump-compat" }
+
+# SPL & Solana dependencies
+spl-pod = { git = "ssh://git@github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
+spl-associated-token-account = { git = "ssh://git@github.com/hamkj7hpo/associated-token-account.git", branch = "safe-pump-compat", package = "spl-associated-token-account" }
+spl-tlv-account-resolution = { git = "ssh://git@github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat", package = "spl-tlv-account-resolution" }
+spl-discriminator = { git = "ssh://git@github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-discriminator" }
+spl-token-2022 = { git = "ssh://git@github.com/hamkj7hpo/token-2022.git", branch = "safe-pump-compat", package = "spl-token-2022" }
+spl-memo = { git = "ssh://git@github.com/hamkj7hpo/memo.git", branch = "safe-pump-compat", package = "spl-memo", version = "6.0.0" }
+spl-transfer-hook-interface = { git = "ssh://git@github.com/hamkj7hpo/transfer-hook.git", branch = "safe-pump-compat", package = "spl-transfer-hook-interface" }
+spl-token-metadata-interface = { git = "ssh://git@github.com/hamkj7hpo/token-metadata.git", branch = "safe-pump-compat", package = "spl-token-metadata-interface" }
+spl-token-group-interface = { git = "ssh://git@github.com/hamkj7hpo/token-group.git", branch = "safe-pump-compat", package = "spl-token-group-interface" }
+spl-math = { git = "ssh://git@github.com/hamkj7hpo/solana-program-library.git", branch = "safe-pump-compat", package = "spl-math" }
 
 # Anchor
-anchor-lang = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-lang", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-spl", default-features = false }
+anchor-lang = { git = "ssh://git@github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat" }
+anchor-spl = { git = "ssh://git@github.com/hamkj7hpo/anchor.git", branch = "safe-pump-compat", package = "anchor-spl", default-features = false }
 
 # Raydium
-raydium-cp-swap = { git = "https://github.com/hamkj7hpo/raydium-cp-swap.git", branch = "safe-pump-compat", package = "raydium-cp-swap", default-features = false }
+raydium-cp-swap = { path = "/tmp/deps/raydium-cp-swap/programs/cp-swap", default-features = false }
 
 # zk-SDK
-solana-zk-sdk = { git = "https://github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
+solana-zk-sdk = { git = "ssh://git@github.com/hamkj7hpo/zk-elgamal-proof.git", branch = "safe-pump-compat", package = "solana-zk-sdk" }
 
 [features]
 cpi = []
-zeroize = ["dep:zeroize"]
 
 [profile.release]
 overflow-checks = true
-
-[patch.crates-io]
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat" }
-curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2" }
-spl-pod = { git = "https://github.com/hamkj7hpo/spl-pod.git", branch = "safe-pump-compat" }
-spl-tlv-account-resolution = { git = "https://github.com/hamkj7hpo/spl-type-length-value.git", branch = "safe-pump-compat" }
-
-[patch.'https://github.com/hamkj7hpo/raydium-cp-swap.git']
-raydium-cp-swap = { path = "/tmp/deps/raydium-cp-swap/programs/cp-swap" }
