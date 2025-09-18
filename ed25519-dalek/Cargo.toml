@@ -77,7 +77,7 @@ alloc = [
     "ed25519/alloc",
     "signature/alloc",
     "serde?/alloc",
-    "zeroize?/alloc",
+    "zeroize/alloc",
 ]
 
 batch = ["alloc", "dep:keccak", "rand_core"]
