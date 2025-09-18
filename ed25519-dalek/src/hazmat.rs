@@ -9,8 +9,6 @@ use zeroize::Zeroize;
 // bring these back so signing.rs compiles
 use crate::constants::*;
 use crate::errors::*;
-use crate::public::*;
-use crate::secret::*;
 use crate::signature::*;
 
 /// An expanded secret key
