@@ -1,65 +1,54 @@
 use core::convert::TryFrom;
 
-use curve25519_dalek::scalar::Scalar;
-use sha2::{Digest, Sha512};
-
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
-// bring these back so signing.rs compiles
 use crate::constants::*;
 use crate::errors::*;
+// use crate::public::*;   // removed (no longer exists in v3)
+// use crate::secret::*;   // removed (no longer exists in v3)
 use crate::signature::*;
 
-/// An expanded secret key
+use curve25519_dalek::edwards::EdwardsPoint;
+use curve25519_dalek::scalar::Scalar;
+
+use zeroize::Zeroize;
+
+/// The “expanded” secret key.
+///
+/// Internally, this is two 32-byte values:
+/// - The scalar used for signing
+/// - The “prefix” used during nonce generation
 #[derive(Clone)]
 pub struct ExpandedSecretKey {
-    pub(crate) scalar: Scalar,
-    pub(crate) hash_prefix: [u8; 32],
+    pub key: Scalar,
+    pub nonce: [u8; 32],
+}
+
+impl Zeroize for ExpandedSecretKey {
+    fn zeroize(&mut self) {
+        self.key.zeroize();
+        self.nonce.zeroize();
+    }
+}
+
+impl Drop for ExpandedSecretKey {
+    fn drop(&mut self) {
+        self.zeroize();
+    }
 }
 
 impl ExpandedSecretKey {
-    /// Create from SecretKey
-    pub fn from_secret_key(secret_key: &SecretKey) -> ExpandedSecretKey {
-        let hash: [u8; 64] = Sha512::digest(secret_key.as_bytes()).into();
-
-        let mut scalar_bytes = [0u8; 32];
-        scalar_bytes.copy_from_slice(&hash[..32]);
-        scalar_bytes[0] &= 248;
-        scalar_bytes[31] &= 63;
-        scalar_bytes[31] |= 64;
-
-        // use from_bytes_mod_order instead of from_bits
-        let scalar = Scalar::from_bytes_mod_order(scalar_bytes);
-
-        let mut hash_prefix = [0u8; 32];
-        hash_prefix.copy_from_slice(&hash[32..]);
-
-        ExpandedSecretKey { scalar, hash_prefix }
-    }
-
-    /// Reconstruct from raw bytes (needed by signing.rs)
+    /// Convert a 64-byte array into an `ExpandedSecretKey`.
     pub fn from_bytes(bytes: &[u8; 64]) -> ExpandedSecretKey {
-        let mut scalar_bytes = [0u8; 32];
-        scalar_bytes.copy_from_slice(&bytes[..32]);
-        scalar_bytes[0] &= 248;
-        scalar_bytes[31] &= 63;
-        scalar_bytes[31] |= 64;
-
-        let scalar = Scalar::from_bytes_mod_order(scalar_bytes);
-
-        let mut hash_prefix = [0u8; 32];
-        hash_prefix.copy_from_slice(&bytes[32..]);
-
-        ExpandedSecretKey { scalar, hash_prefix }
+        let key = Scalar::from_bits(<[u8; 32]>::try_from(&bytes[..32]).unwrap());
+        let mut nonce = [0u8; 32];
+        nonce.copy_from_slice(&bytes[32..]);
+        ExpandedSecretKey { key, nonce }
     }
-}
 
-#[cfg(feature = "zeroize")]
-impl Drop for ExpandedSecretKey {
-    fn drop(&mut self) {
-        self.hash_prefix.zeroize();
-        let mut scalar_bytes = self.scalar.to_bytes();
-        scalar_bytes.zeroize();
+    /// Convert this expanded secret key to bytes.
+    pub fn to_bytes(&self) -> [u8; 64] {
+        let mut bytes = [0u8; 64];
+        bytes[..32].copy_from_slice(&self.key.to_bytes());
+        bytes[32..].copy_from_slice(&self.nonce);
+        bytes
     }
 }
