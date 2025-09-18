@@ -10,8 +10,13 @@ resolver = "2"
 [profile.dev]
 opt-level = 2
 
+# Patch just overrides the source; do NOT add features here
 [patch.crates-io]
 curve25519-dalek-derive = { path = "./curve25519-dalek-derive" }
 curve25519-dalek        = { path = "./curve25519-dalek" }
 x25519-dalek            = { path = "./x25519-dalek" }
 ed25519-dalek           = { path = "./ed25519-dalek" }
+
+# Workspace-level feature to enable zeroize in all crates that support it
+[workspace.features]
+zeroize = ["curve25519-dalek/zeroize", "ed25519-dalek/zeroize"]
