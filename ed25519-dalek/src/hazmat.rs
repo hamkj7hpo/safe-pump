@@ -1,3 +1,4 @@
+use zeroize::Zeroize;
 //! Low-level interfaces to ed25519 functions
 //!
 //! # ⚠️ Warning: Hazmat
