@@ -1,12 +1,7 @@
 [package]
 name = "x25519-dalek"
-edition = "2024"
-# Before changing this:
-# - update version in README.md
-# - update html_root_url
-# - update CHANGELOG
-# - if any changes were made to README.md, mirror them in src/lib.rs docs
 version = "3.0.0-pre.0"
+edition = "2024"
 authors = [
     "Isis Lovecruft <isis@patternsinthevoid.net>",
     "DebugSteven <debugsteven@gmail.com>",
@@ -44,14 +39,12 @@ features = ["os_rng", "reusable_secrets", "serde", "static_secrets"]
 [dependencies]
 curve25519-dalek = { version = "=5.0.0-pre.0", default-features = false }
 rand_core = { version = "0.9", default-features = false }
-serde = { version = "1", default-features = false, optional = true, features = [
-    "derive",
-] }
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat-v2", package = "zeroize", version = "1.3.0" }
+serde = { version = "1.0", default-features = false, optional = true, features = ["derive"] }
+zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat-v2", package = "zeroize", optional = true }
 
 [dev-dependencies]
-bincode = "1"
-criterion = "0.5"
+bincode = "1.0"
+criterion = { version = "0.5" }
 rand_core = { version = "0.9", default-features = false, features = ["os_rng"] }
 
 [[bench]]
@@ -60,11 +53,11 @@ harness = false
 
 [features]
 std = ["alloc", "rand_core/std"]
-default = ["alloc", "precomputed-tables", "zeroize"]
-os_rng = ["rand_core/os_rng"]
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat-v2", version = "1.3.0" }
-serde = ["dep:serde", "curve25519-dalek/serde"]
+default = ["alloc", "precomputed-tables"]
 alloc = ["curve25519-dalek/alloc", "serde?/alloc", "zeroize?/alloc"]
 precomputed-tables = ["curve25519-dalek/precomputed-tables"]
+os_rng = ["rand_core/os_rng"]
 reusable_secrets = []
 static_secrets = []
+zeroize = ["dep:zeroize"]
+serde = ["dep:serde", "curve25519-dalek/serde"]
