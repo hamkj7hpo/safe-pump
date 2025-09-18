@@ -1,4 +1,3 @@
-use zeroize::Zeroize;
 //! Low-level interfaces to ed25519 functions
 //!
 //! # ⚠️ Warning: Hazmat
@@ -15,6 +14,8 @@ use zeroize::Zeroize;
 #![allow(dead_code)]
 
 use core::fmt::Debug;
+use zeroize::Zeroize;
+use zeroize::ZeroizeOnDrop
 
 use crate::{InternalError, SignatureError};
 
