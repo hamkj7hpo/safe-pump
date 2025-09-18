@@ -14,8 +14,7 @@
 #![allow(dead_code)]
 
 use core::fmt::Debug;
-use zeroize::Zeroize;
-use zeroize::ZeroizeOnDrop
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::{InternalError, SignatureError};
 
