@@ -19,7 +19,6 @@ use core::convert::TryFrom;
 use crate::{InternalError, SignatureError};
 
 use curve25519_dalek::scalar::{Scalar, clamp_integer};
-use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
 use curve25519_dalek::digest::{Digest, array::typenum::U64};
 
 use subtle::{Choice, ConstantTimeEq};
