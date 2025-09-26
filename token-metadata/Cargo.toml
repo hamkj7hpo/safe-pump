@@ -1,0 +1,20 @@
+[package]
+name = "spl-token-metadata-interface"
+version = "0.3.4"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+license = "Apache-2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+path = "interface/src/lib.rs"
+
+[dependencies]
+solana-program = { path = "../solana-program", version = "2.1.0" }
+spl-pod = { path = "../spl-pod" }
+spl-discriminator = { path = "../solana-program-library/libraries/discriminator" }
+spl-program-error = { path = "../solana-program-library/libraries/program-error" }
+spl-type-length-value = { path = "../spl-type-length-value" }
+bytemuck = { version = "1.18.0", features = ["derive"] }
+borsh = "0.10.3"
+

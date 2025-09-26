@@ -1,0 +1,21 @@
+[package]
+name = "solana-logger"
+description = "Solana Logger"
+documentation = "https://docs.rs/solana-logger"
+version = "1.25.0"
+authors = ["Solana Labs Maintainers <maintainers@solana.com>"]
+repository = "https://github.com/solana-labs/solana"
+homepage = "https://solana.com"
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+env_logger = "0.10.2"
+lazy_static = "1.4.0"
+log = "0.4.20"
+
+[lib]
+name = "solana_logger"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

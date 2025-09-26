@@ -9,7 +9,7 @@ authors = [
 ]
 readme = "README.md"
 license = "BSD-3-Clause"
-repository = "https://github.com/dalek-cryptography/curve25519-dalek/tree/main/ed25519-dalek"
+repository = "https://github.com/dalek-cryptography/curve25519-dalek"
 homepage = "https://github.com/dalek-cryptography/curve25519-dalek"
 documentation = "https://docs.rs/ed25519-dalek"
 keywords = ["cryptography", "ed25519", "curve25519", "signature", "ECC"]
@@ -28,34 +28,32 @@ rustdoc-args = [
 features = ["batch", "digest", "hazmat", "pem", "serde", "zeroize"]
 
 [dependencies]
-curve25519-dalek = { path = "../curve25519-dalek", default-features = false, features = ["digest", "zeroize"] }
-ed25519          = { version = "=3.0.0-pre.0", default-features = false }
-signature        = { version = "3.0.0-rc.2", optional = true, default-features = false }
-sha2             = { version = "0.11.0-rc.0", default-features = false }
-subtle           = { version = "2.3.0", default-features = false }
-
-# optional features
-keccak    = { version = "0.1", default-features = false, optional = true }
+curve25519-dalek = { path = "../curve25519-dalek", version = "5.0.0-pre.0", default-features = false, features = ["digest", "zeroize"] }
+ed25519 = { version = "=3.0.0-pre.0", default-features = false }
+signature = { version = "3.0.0-rc.2", optional = true, default-features = false }
+sha2 = { version = "0.10.8", default-features = false }
+subtle = { version = "2.6.0", default-features = false }
+keccak = { version = "0.1", default-features = false, optional = true }
 rand_core = { version = "0.9", default-features = false, optional = true }
-serde     = { version = "1.0", default-features = false, optional = true }
-zeroize   = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat-v2", package = "zeroize", version = "1.3.0", optional = true }
+serde = { version = "1.0", default-features = false, optional = true }
+zeroize = { git = "ssh://git@github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.9.0", optional = true }
 
 [dev-dependencies]
-curve25519-dalek = { path = "../curve25519-dalek", default-features = false, features = ["digest", "rand_core", "zeroize"] }
-x25519-dalek     = { version = "=3.0.0-pre.0", default-features = false, features = ["static_secrets"] }
-blake2     = "0.11.0-rc.0"
-sha3       = "0.11.0-rc.0"
-hex        = "0.4"
-bincode    = "1.0"
+curve25519-dalek = { path = "../curve25519-dalek", version = "5.0.0-pre.0", default-features = false, features = ["digest", "rand_core", "zeroize"] }
+x25519-dalek = { version = "=3.0.0-pre.0", default-features = false, features = ["static_secrets"] }
+blake2 = "0.11.0-rc.0"
+sha3 = "0.10.8"
+hex = "0.4"
+bincode = "1.0"
 serde_json = "1.0"
-criterion  = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 hex-literal = "0.4"
-rand       = "0.9"
-rand_core  = { version = "0.9", default-features = false }
+rand = "0.9"
+rand_core = { version = "0.9", default-features = false }
 rand_chacha = "0.9"
-serde      = { version = "1.0", features = ["derive"] }
-strobe-rs  = "0.5"
-toml       = { version = "0.7" }
+serde = { version = "1.0", features = ["derive"] }
+strobe-rs = "0.5"
+toml = { version = "0.7" }
 
 [[bench]]
 name = "ed25519_benchmarks"
@@ -63,23 +61,22 @@ harness = false
 required-features = ["rand_core"]
 
 [features]
-std     = ["alloc", "rand_core/std"]
+std = ["alloc", "rand_core/std"]
 default = ["fast", "zeroize"]
-alloc   = [
+alloc = [
     "curve25519-dalek/alloc",
     "ed25519/alloc",
     "signature/alloc",
     "serde?/alloc",
     "zeroize?/alloc",
 ]
-
-batch  = ["alloc", "dep:keccak", "rand_core"]
-fast   = ["curve25519-dalek/precomputed-tables"]
+batch = ["alloc", "dep:keccak", "rand_core"]
+fast = ["curve25519-dalek/precomputed-tables"]
 digest = ["signature/digest"]
 hazmat = []
 legacy_compatibility = ["curve25519-dalek/legacy_compatibility"]
-pkcs8  = ["ed25519/pkcs8"]
-pem    = ["alloc", "ed25519/pem", "pkcs8"]
+pkcs8 = ["ed25519/pkcs8"]
+pem = ["alloc", "ed25519/pem", "pkcs8"]
 rand_core = ["dep:rand_core"]
-serde     = ["dep:serde", "ed25519/serde"]
-zeroize   = ["dep:zeroize", "curve25519-dalek/zeroize"]
+serde = ["dep:serde", "ed25519/serde"]
+zeroize = ["dep:zeroize", "curve25519-dalek/zeroize"]

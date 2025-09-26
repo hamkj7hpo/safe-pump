@@ -1,0 +1,47 @@
+[package]
+name = "solana-zk-sdk"
+description = "Solana ZK SDK"
+documentation = "https://docs.rs/solana-zk-sdk"
+version = "4.0.0"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+repository = "https://github.com/solana-program/zk-elgamal-proof"
+homepage = "https://anza.xyz/"
+license = "Apache-2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "solana_zk_sdk"
+
+[dependencies]
+base64 = "0.22.1"
+bytemuck = "1.23.2"
+bytemuck_derive = "1.9.3"
+num-derive = "0.4"
+num-traits = "0.2"
+solana-program = { path = "../../solana-program", version = "2.1.0" }
+thiserror = "2.0.14"
+zeroize = { git = "ssh://git@github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.9.0" }
+
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+aes-gcm-siv = "0.11.1"
+bincode = "1.3.3"
+curve25519-dalek = { path = "../../curve25519-dalek", features = ["serde"] }
+itertools = "0.12.1"
+merlin = { version = "3", default-features = false }
+rand = "0.8.5"
+serde = "1.0.219"
+serde_derive = "1.0.219"
+serde_json = "1.0.142"
+sha3 = "0.10.8"
+solana-sdk = { path = "../../solana-sdk", version = "1.25.0" }
+subtle = "2.6.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+js-sys = "0.3.77"
+wasm-bindgen = "0.2"
+
+[dev-dependencies]
+solana-sdk = { path = "../../solana-sdk", version = "1.25.0" }
+tiny-bip39 = "0.8.2"

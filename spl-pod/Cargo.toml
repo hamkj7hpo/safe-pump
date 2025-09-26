@@ -1,0 +1,21 @@
+[package]
+name = "spl-pod"
+version = "0.4.0"
+description = "Solana Program Library Pod Utilities"
+authors = ["Solana Labs Maintainers <maintainers@solanalabs.com>"]
+repository = "https://github.com/hamkj7hpo/spl-pod"
+license = "Apache-2.0"
+edition = "2021"
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+solana-program = { path = "../solana-program", version = "2.1.0" }
+solana-zk-sdk = { path = "../solana-zk-sdk/zk-sdk", version = "4.0.0" }
+zeroize = { git = "ssh://git@github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.9.0", features = ["alloc", "zeroize_derive"], optional = true }
+bytemuck = { version = "1.18.0", features = ["derive"] }
+thiserror = "1.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]

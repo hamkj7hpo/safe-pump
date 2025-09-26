@@ -40,7 +40,7 @@ features = ["os_rng", "reusable_secrets", "serde", "static_secrets"]
 curve25519-dalek = { version = "=5.0.0-pre.0", default-features = false }
 rand_core = { version = "0.9", default-features = false }
 serde = { version = "1.0", default-features = false, optional = true, features = ["derive"] }
-zeroize = { git = "https://github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat-v2", package = "zeroize", optional = true }
+zeroize = { git = "ssh://git@github.com/hamkj7hpo/utils.git", branch = "safe-pump-compat", version = "1.9.0", optional = true }
 
 [dev-dependencies]
 bincode = "1.0"

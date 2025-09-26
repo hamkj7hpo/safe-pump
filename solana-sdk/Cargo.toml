@@ -1,0 +1,98 @@
+[package]
+name = "solana-sdk"
+description = "Solana SDK"
+documentation = "https://docs.rs/solana-sdk"
+readme = "README.md"
+version = "1.25.0"
+authors = ["Solana Labs Maintainers <maintainers@solana.com>"]
+repository = "https://github.com/solana-labs/solana"
+homepage = "https://solana.com"
+license = "Apache-2.0"
+edition = "2021"
+
+[features]
+program = []
+default = ["full"]
+full = [
+    "assert_matches",
+    "byteorder",
+    "chrono",
+    "generic-array",
+    "memmap2",
+    "rand",
+    "rand0-7",
+    "serde_json",
+    "ed25519-dalek",
+    "ed25519-dalek-bip32",
+    "solana-logger",
+    "libsecp256k1",
+    "sha3",
+    "digest",
+]
+dev-context-only-utils = []
+
+[dependencies]
+solana-program = { path = "../solana-program", version = "2.1.0" }
+assert_matches = { version = "1.5.0", optional = true }
+base64 = "0.22.1"
+bincode = "1.3.3"
+bitflags = "2.6.0"
+borsh = "0.10.3"
+bs58 = "0.4.0"
+bytemuck = { version = "1.18.0", features = ["derive"] }
+byteorder = { version = "1.4.3", optional = true }
+chrono = { version = "0.4.38", features = ["alloc"], optional = true }
+curve25519-dalek = { path = "../curve25519-dalek", version = "5.0.0-pre.0", optional = true }
+derivation-path = "0.2.0"
+digest = { version = "0.10.7", optional = true }
+ed25519-dalek = { path = "../ed25519-dalek", optional = true }
+ed25519-dalek-bip32 = { version = "0.3.0", optional = true }
+generic-array = { version = "0.14.7", features = ["serde", "more_lengths"], optional = true }
+hmac = "0.12.1"
+itertools = "0.12.1"
+lazy_static = "1.4.0"
+libsecp256k1 = { version = "0.7.1", optional = true }
+log = "0.4.20"
+memmap2 = { version = "0.5.10", optional = true }
+num-derive = "0.3.3"
+num-traits = "0.2.19"
+num_enum = "0.7.3"
+pbkdf2 = "0.12.2"
+qstring = "0.7.2"
+qualifier_attr = "0.2.2"
+rand = { version = "0.8.5", optional = true }
+rand0-7 = { package = "rand", version = "0.7", optional = true }
+rustversion = "1.0.10"
+serde = "1.0.210"
+serde_bytes = "0.11.11"
+serde_derive = "1.0.210"
+serde_json = { version = "1.0.128", optional = true }
+serde_with = { version = "3.9.0", features = ["macros"] }
+sha2 = "0.10.8"
+sha3 = { version = "0.10.8", optional = true }
+siphasher = "0.3.11"
+solana-logger = { path = "../solana-logger", optional = true }
+solana-sdk-macro = { path = "./macro" }
+thiserror = "1.0.63"
+uriparse = "0.6.4"
+wasm-bindgen = "0.2.93"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.77"
+
+[dev-dependencies]
+anyhow = "1.0.86"
+hex = "0.4.3"
+curve25519-dalek = { path = "../curve25519-dalek", version = "5.0.0-pre.0" }
+solana-sdk = { path = ".", version = "1.25.0", features = ["dev-context-only-utils"] }
+static_assertions = "1.1.0"
+tiny-bip39 = "0.8.2"
+
+[build-dependencies]
+rustc_version = "0.4.0"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
